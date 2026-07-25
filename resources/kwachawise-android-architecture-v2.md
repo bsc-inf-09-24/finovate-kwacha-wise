@@ -1,13 +1,19 @@
-# KwachaWise — Android Architecture (v2)
+# KwachaWise — Android Architecture (v3)
 
 **Brand:** Kwacha Wize — indigo "k" mark (#5B4FE8-ish) on black rounded-square,
-pixel-style wordmark. Icon assets generated in `kwachawise-android-icons.zip`
-(mdpi→xxxhdpi mipmaps + Play Store 512px) from the mark you supplied — drop
-`mipmap-*/` straight into `app/src/main/res/`.
+pixel-style wordmark. Icon assets in `kwachawise-android-icons.zip`
+(mdpi→xxxhdpi mipmaps + Play Store 512px) — drop `mipmap-*/` into
+`app/src/main/res/`.
+
+**Changelog from v2:** adds manual cash entry (was promised in the concept
+brief but missing from v2), a paste-SMS fallback screen (demo insurance),
+and a financial health signal folded into the Groq output (concept brief
+promises "financial health reports" — v2 only had generic recommendations).
+No changes to the core store-first/sort-second/enrich-with-AI flow.
 
 ---
 
-## 1. Stack (unchanged, confirmed fast)
+## 1. Stack (unchanged)
 
 | Layer | Choice |
 |---|---|
@@ -19,23 +25,19 @@ pixel-style wordmark. Icon assets generated in `kwachawise-android-icons.zip`
 
 ---
 
-## 2. Simplified flow: store first, sort second, enrich with AI
-
-This is the right call — it removes provider-detection edge cases from the
-critical path. Every SMS gets stored immediately, untagged; sorting and AI
-happen later, async, off the phone's back.
+## 2. Data flow: store first, sort second, enrich with AI
 
 ```
-[ Incoming SMS ]
-      │
-      ▼
-[ BroadcastReceiver ] ── extract body, sender, timestamp
-      │
-      ▼
-[ Regex: amount + balance ] ── best-effort, non-blocking
-      │
-      ▼
-[ Room: insert as UNSORTED ] ◄────────► [ Compose Feed: "Review Pending" ]
+[ Incoming SMS ]                    [ Manual entry: cash / paste-SMS ]
+      │                                          │
+      ▼                                          │
+[ BroadcastReceiver ] ── extract body/sender     │
+      │                                          │
+      ▼                                          │
+[ Regex: amount + balance ]                      │
+      │                                          │
+      ▼                                          ▼
+[ Room: insert as UNSORTED* ] ◄──────────► [ Compose Feed: "Review Pending" ]
                                                     │
                                        user taps 💼 Business / 🏠 Personal
                                        + optional note
@@ -44,14 +46,16 @@ happen later, async, off the phone's back.
                                        [ Room: update type + description ]
                                                     │
                                     (on demand, not per-SMS) ▼
-                                       [ Groq: batched insights/summary ]
+                                    [ Groq: batched insights + health signal ]
 ```
 
-Key difference from v1: **Groq is not in the per-SMS path at all now.**
-Categorization is manual (Business/Personal tap), and Groq only runs when
-the user asks for insights — it summarizes already-tagged data instead of
-classifying each transaction. Cheaper, faster, and removes Groq latency from
-the ingestion path entirely — nothing to await while an SMS is being saved.
+`*` Manual cash entries skip UNSORTED — the user tags type/description at
+the point of entry, so they're written directly as BUSINESS/PERSONAL.
+Paste-SMS entries go through the same regex path as real SMS and land as
+UNSORTED like normal.
+
+Groq stays out of the per-SMS/per-entry path entirely — it only runs when
+the user opens Insights, and only over already-tagged rows.
 
 ---
 
@@ -67,7 +71,8 @@ data class TransactionEntity(
     val parsedAmount: Double?,
     val detectedBalance: Double?,
     var type: String = "UNSORTED",   // "BUSINESS" | "PERSONAL" | "UNSORTED"
-    var description: String = ""
+    var description: String = "",
+    val source: String = "SMS"       // "SMS" | "MANUAL" — NEW in v3
 )
 
 @Dao
@@ -81,8 +86,19 @@ interface TransactionDao {
     @Query("SELECT * FROM transactions WHERE type = 'UNSORTED' ORDER BY timestamp DESC")
     fun getUnsorted(): Flow<List<TransactionEntity>>
 
+    @Query("SELECT * FROM transactions WHERE type != 'UNSORTED' ORDER BY timestamp DESC")
+    fun getTagged(): Flow<List<TransactionEntity>>
+
     @Query("UPDATE transactions SET type = :type, description = :description WHERE id = :id")
     suspend fun updateTransactionTag(id: Int, type: String, description: String)
+
+    @Query("""SELECT detectedBalance FROM transactions
+              WHERE detectedBalance IS NOT NULL
+              ORDER BY timestamp DESC LIMIT 1""")
+    fun getLatestBalance(): Flow<Double?>
+
+    @Query("SELECT COUNT(*) FROM transactions WHERE type = 'UNSORTED'")
+    fun getUnsortedCount(): Flow<Int>
 }
 
 @Database(entities = [TransactionEntity::class], version = 1)
@@ -113,26 +129,6 @@ abstract class AppDatabase : RoomDatabase() {
 ```
 
 ```kotlin
-class SmsReceiver : BroadcastReceiver() {
-    override fun onReceive(context: Context, intent: Intent) {
-        val messages = Telephony.Sms.Intents.getMessagesFromIntent(intent)
-        val body = messages.joinToString("") { it.messageBody }
-        val sender = messages.firstOrNull()?.originatingAddress ?: return
-
-        val entity = TransactionEntity(
-            rawSms = body,
-            sender = sender,
-            timestamp = System.currentTimeMillis(),
-            parsedAmount = SmsParser.parseAmount(body),
-            detectedBalance = SmsParser.parseBalance(body)
-        )
-
-        CoroutineScope(Dispatchers.IO).launch {
-            AppDatabase.get(context.applicationContext).transactionDao().insertTransaction(entity)
-        }
-    }
-}
-
 object SmsParser {
     private val AMOUNT = Regex(
         """(?:MWK|MK|MKW)\s*([\d,]+(?:\.\d{2})?)""", RegexOption.IGNORE_CASE
@@ -149,70 +145,118 @@ object SmsParser {
 }
 ```
 
-Home screen's balance figure = most recent non-null `detectedBalance` across
-all rows (`SELECT detectedBalance FROM transactions WHERE detectedBalance IS
-NOT NULL ORDER BY timestamp DESC LIMIT 1`) — one query, no separate balance
-table needed unless you want per-account balances later.
+`SmsReceiver` writes straight to Room on `Dispatchers.IO`, unchanged from v2.
+
+Home screen balance = latest non-null `detectedBalance` across all rows —
+one query, no separate balance table.
 
 ---
 
-## 5. Groq — insights only, called on demand
+## 5. NEW — Manual cash entry
+
+Closes a gap between the concept brief ("allows users to record cash
+deposits") and v2's architecture, which only modeled SMS-derived rows.
+
+- Screen: simple form — amount, description, Business/Personal toggle
+- Writes directly to Room as a **tagged** row (`source = "MANUAL"`), no
+  UNSORTED step needed since the user already knows what it is
+- Appears in the Transactions list alongside SMS-derived rows, distinguished
+  by the `source` field
+- Counts toward Groq insights the same as any tagged transaction
+
+```kotlin
+suspend fun insertManual(amount: Double, type: String, description: String) {
+    dao.insertTransaction(
+        TransactionEntity(
+            rawSms = "Manual entry",
+            sender = "MANUAL",
+            timestamp = System.currentTimeMillis(),
+            parsedAmount = amount,
+            detectedBalance = null,
+            type = type,
+            description = description,
+            source = "MANUAL"
+        )
+    )
+}
+```
+
+---
+
+## 6. NEW — Paste-SMS fallback
+
+Demo insurance in case live SMS delivery is awkward on the presentation
+device (emulator, no SIM, permission friction in front of judges).
+
+- A text field where the user pastes SMS body text
+- Runs through the **same** `SmsParser.parseAmount` / `parseBalance`
+- Writes to Room as UNSORTED, `source = "SMS"`, `sender = "PASTED"`
+- Then flows through the normal Review Pending → tag → insights pipeline
+  with zero special-casing downstream
+
+---
+
+## 7. Groq — insights + health signal, called on demand
 
 ```kotlin
 interface GroqApi {
     @POST("openai/v1/chat/completions")
     suspend fun chat(@Header("Authorization") auth: String, @Body req: GroqRequest): GroqResponse
 }
-
-data class GroqRequest(
-    val model: String = "llama-3.1-8b-instant",
-    val messages: List<Message>
-)
-data class Message(val role: String, val content: String)
-data class GroqResponse(val choices: List<Choice>)
-data class Choice(val message: Message)
 ```
 
-Payload built from tagged rows only (`type != 'UNSORTED'`):
+System prompt (updated to cover the concept brief's "financial health
+reports" promise, which v2 didn't address):
 
 ```json
 {
   "model": "llama-3.1-8b-instant",
   "messages": [
-    { "role": "system", "content": "You are KwachaWise, an AI financial coach for Malawian micro-entrepreneurs. Analyze the categorized transactions and give 3 short, actionable financial recommendations." },
-    { "role": "user", "content": "[{\"type\":\"BUSINESS\",\"amount\":15000,\"desc\":\"Bought inventory\"},{\"type\":\"PERSONAL\",\"amount\":2000,\"desc\":\"Airtime\"}]" }
+    {
+      "role": "system",
+      "content": "You are KwachaWise, an AI financial coach for Malawian micro-entrepreneurs. Analyze the categorized transactions. Respond with: (1) a one-line financial health signal — Healthy, Watch, or At Risk — with a short reason, (2) 3 short, actionable financial recommendations."
+    },
+    {
+      "role": "user",
+      "content": "[{\"type\":\"BUSINESS\",\"amount\":15000,\"desc\":\"Bought inventory\"},{\"type\":\"PERSONAL\",\"amount\":2000,\"desc\":\"Airtime\"}]"
+    }
   ]
 }
 ```
 
-API key via `local.properties` → `BuildConfig`, never hardcoded:
-```
-// local.properties
-groq.api.key=gsk_xxx
-// app/build.gradle.kts
-buildConfigField("String", "GROQ_API_KEY", "\"${'$'}{project.findProperty("groq.api.key")}\"")
-```
+**Resilience requirement (new):** wrap the Groq call in try/catch with a
+hardcoded fallback insights string. A flaky API key or no network must
+never blank out the Insights screen during a live demo.
+
+API key via `local.properties` → `BuildConfig`, never hardcoded — unchanged
+from v2.
 
 ---
 
-## 6. Screens (minimum for demo)
+## 8. Screens (updated)
 
-1. **Home** — balance (from `detectedBalance`), unsorted count badge
-2. **Review Pending** — feed of `UNSORTED` rows, tap-to-tag Business/Personal + note
-3. **Transactions** — full tagged list, filterable
-4. **Insights** — "Get insights" button → Groq call → 3 recommendations
+1. **Home** — balance (from `detectedBalance`), unsorted count badge, entry
+   points to all other screens including manual entry
+2. **Review Pending** — feed of `UNSORTED` rows (from SMS or pasted SMS),
+   tap-to-tag Business/Personal + note
+3. **Transactions** — full tagged list (SMS + manual), filterable by type
+4. **Insights** — "Get insights" button → Groq call → health signal + 3
+   recommendations, with offline fallback text
+5. **Add Cash Transaction (NEW)** — manual entry form
+6. **Paste SMS (NEW, optional)** — text field + parse button, demo fallback
 
 ---
 
-## 7. Build order (24h budget)
+## 9. Build order (24h budget, updated)
 
-1. Room entity/DAO + SmsReceiver + regex — copy-paste above, test against real SMS (2-3 hrs, critical path)
-2. Manual paste-SMS fallback screen, same parser (30 min — demo safety net)
-3. Review Pending feed wired to `getUnsorted()` Flow (2 hrs)
-4. Transactions list + Home balance (2 hrs)
-5. Groq insights call wired to a button (1 hr)
-6. Launcher icons from `kwachawise-android-icons.zip` + app name (15 min)
+1. Room entity/DAO + SmsReceiver + regex — test against real SMS (2-3 hrs, critical path)
+2. Review Pending feed wired to `getUnsorted()` Flow (2 hrs)
+3. Transactions list + Home balance (2 hrs)
+4. Manual cash entry screen (30 min — closes concept-brief gap)
+5. Groq insights call with health signal + offline fallback (1-1.5 hrs)
+6. Paste-SMS fallback screen (20-30 min — demo safety net, do this if time allows)
+7. Launcher icons from `kwachawise-android-icons.zip` + app name (15 min)
 
-Same caveat as before still holds for a Play Store release: `RECEIVE_SMS` is
-a restricted permission unless you're the user's default SMS handler — fine
-for a sideloaded hackathon build, flag as a known next step for judges.
+Same caveat as before for a Play Store release: `RECEIVE_SMS` is a
+restricted permission unless you're the default SMS handler — fine for a
+sideloaded hackathon build, flag as a known next step for judges.
