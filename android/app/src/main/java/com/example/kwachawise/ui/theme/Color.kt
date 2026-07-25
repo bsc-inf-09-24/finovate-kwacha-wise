@@ -2,10 +2,15 @@ package com.example.kwachawise.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
+val KwachaPrimary = Color(0xFF5B4FE8)
+val KwachaPrimaryLight = Color(0xFF8E85F3)
+val KwachaSecondary = Color(0xFF03DAC6)
+val KwachaBackground = Color(0xFFF4F6FA)
+val KwachaSurface = Color(0xFFFFFFFF)
+val KwachaOnBackground = Color(0xFF1A1A1A)
+val KwachaOnSurface = Color(0xFF1A1A1A)
+val KwachaError = Color(0xFFB00020)
 
-val Purple40 = Color(0xFF6650a4)
-val PurpleGrey40 = Color(0xFF625b71)
-val Pink40 = Color(0xFF7D5260)
+val KwachaDarkBlue = Color(0xFF1E1E2C)
+val KwachaSuccess = Color(0xFF4CAF50)
+val KwachaWarning = Color(0xFFFFA000)
