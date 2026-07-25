@@ -169,11 +169,8 @@ insights screen never goes blank during a demo.
 ---
 
 ## Team
-
-Group 15 — [team members / roles here]
-
-## Project Status
-
-Hackathon prototype — core flow (capture → review → tag → insights) is
-functional; see Known Limitations above for what's intentionally out of
-scope for this build.
+* Mike Prosper Kamanga - UI/UX Designer and Developer
+* Patrick Solomon - Developer
+* Thokozani Mofolo - Project Manager / Communicator (Group Leader)
+* Denis Decal - Business Strategist
+* Dominic Smith - Researcher
