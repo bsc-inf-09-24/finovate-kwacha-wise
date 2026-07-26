@@ -3,12 +3,11 @@ package com.example.kwachawise.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.example.kwachawise.data.GroqClient
 import com.example.kwachawise.data.TransactionRepository
 import com.example.kwachawise.models.Transaction
 import com.example.kwachawise.models.TransactionTag
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 class TransactionViewModel(private val repository: TransactionRepository) : ViewModel() {
@@ -19,6 +18,15 @@ class TransactionViewModel(private val repository: TransactionRepository) : View
     val sortedTransactions: StateFlow<List<Transaction>> = repository.sortedTransactions
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    val balance: StateFlow<Double> = repository.balance
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
+
+    val pendingCount: StateFlow<Int> = pendingTransactions.map { it.size }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
+
+    private val _aiInsights = MutableStateFlow<String?>(null)
+    val aiInsights: StateFlow<String?> = _aiInsights.asStateFlow()
+
     fun updateTransactionTag(transactionId: String, tag: TransactionTag, note: String?) {
         viewModelScope.launch {
             repository.updateTag(transactionId, tag, note)
@@ -28,6 +36,26 @@ class TransactionViewModel(private val repository: TransactionRepository) : View
     fun addManualTransaction(transaction: Transaction) {
         viewModelScope.launch {
             repository.insert(transaction)
+        }
+    }
+
+    fun fetchAiInsights() {
+        viewModelScope.launch {
+            val transactions = sortedTransactions.value
+            if (transactions.isEmpty()) {
+                _aiInsights.value = "SIGNAL: Watch\nADVICE: Start recording transactions to get AI insights.\nADVICE: Sort pending SMS entries.\nADVICE: Use 'Add Cash Entry' for manual records."
+                return@launch
+            }
+
+            val summary = transactions.joinToString("\n") { 
+                "${it.date}: ${it.type} ${it.amount} - ${it.description}" 
+            }
+            val insights = GroqClient.getFinancialInsights(summary)
+            if (insights == null) {
+                _aiInsights.value = "SIGNAL: Watch\nADVICE: Unable to connect to AI advisor.\nADVICE: Check your internet connection.\nADVICE: Try again in a few minutes."
+            } else {
+                _aiInsights.value = insights
+            }
         }
     }
 }
