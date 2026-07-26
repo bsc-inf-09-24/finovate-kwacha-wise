@@ -1,6 +1,7 @@
 package com.example.kwachawise.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -8,6 +9,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -34,6 +36,7 @@ fun InsightsScreen(
     history: List<AiAnalysisEntity> = emptyList(),
     isNewDataAvailable: Boolean = true,
     onViewInsights: () -> Unit,
+    onViewDocuments: () -> Unit,
     onBack: () -> Unit
 ) {
     var loading by remember { mutableStateOf(false) }
@@ -137,6 +140,21 @@ fun InsightsScreen(
 
                 item {
                     Text(
+                        text = "Bank Documents",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    ActionCard(
+                        title = "Generate Bank-Ready Reports",
+                        description = "Create formal financial statements for audits or loan applications.",
+                        icon = Icons.Default.Description,
+                        onClick = onViewDocuments
+                    )
+                }
+
+                item {
+                    Text(
                         text = "Recommendations",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold
@@ -204,6 +222,47 @@ fun HistoryItem(analysis: AiAnalysisEntity) {
                 Text(text = "Signal: $signal", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             Icon(Icons.Default.Info, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
+        }
+    }
+}
+
+@Composable
+fun ActionCard(
+    title: String,
+    description: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+            }
+            Spacer(modifier = Modifier.width(16.dp))
+            Column {
+                Text(text = title, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                Text(
+                    text = description,
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                )
+            }
         }
     }
 }

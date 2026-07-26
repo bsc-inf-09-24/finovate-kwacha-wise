@@ -73,4 +73,40 @@ object GroqClient {
             null
         }
     }
+
+    suspend fun generateBankReport(
+        businessName: String,
+        period: String,
+        transactionSummary: String
+    ): String? {
+        val prompt = """
+            You are a professional accountant. Generate a formal financial report for a bank.
+            The report should be for the business "$businessName" for the period "$period".
+            
+            Use the following transaction data:
+            $transactionSummary
+            
+            The report MUST include:
+            1. A clear header: "FINANCIAL PERFORMANCE REPORT"
+            2. Business Name and Period.
+            3. Executive Summary (2-3 sentences).
+            4. Income Statement Summary (Total Income, Total Expenses, Net Profit/Loss).
+            5. Category Breakdown (e.g., Business Expenses vs Personal/Other).
+            6. A formal conclusion regarding the business's creditworthiness or financial health.
+            
+            Format the report with professional language, using bullet points and clear sections.
+            Avoid any conversational filler. Start directly with the report.
+        """.trimIndent()
+
+        return try {
+            val response = service.getCompletion(
+                API_KEY,
+                GroqRequest(messages = listOf(GroqMessage(role = "user", content = prompt)))
+            )
+            response.choices.firstOrNull()?.message?.content
+        } catch (e: Exception) {
+            Log.e(TAG, "Error generating bank report from Groq", e)
+            null
+        }
+    }
 }

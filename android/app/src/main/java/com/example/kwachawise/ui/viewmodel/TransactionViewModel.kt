@@ -119,6 +119,50 @@ class TransactionViewModel(private val repository: TransactionRepository) : View
         list.count { !it.isRead }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
+    // Documents logic
+    val allDocuments = repository.allDocuments
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    private val _isGeneratingDocument = MutableStateFlow(false)
+    val isGeneratingDocument = _isGeneratingDocument.asStateFlow()
+
+    fun generateDocument(startDate: Long, endDate: Long, title: String) {
+        viewModelScope.launch {
+            _isGeneratingDocument.value = true
+            try {
+                val transactions = sortedTransactions.value.filter {
+                    it.createdAt in startDate..endDate
+                }
+
+                if (transactions.isEmpty()) {
+                    // Handle empty state if needed
+                    return@launch
+                }
+
+                val summary = transactions.joinToString("\n") {
+                    "${com.example.kwachawise.utils.DateTimeUtils.formatDate(it.createdAt)}: ${it.type} ${it.amount} - ${it.description}"
+                }
+
+                val periodStr = "${com.example.kwachawise.utils.DateTimeUtils.formatDate(startDate)} to ${com.example.kwachawise.utils.DateTimeUtils.formatDate(endDate)}"
+                val report = GroqClient.generateBankReport("Amikhy's Business", periodStr, summary)
+
+                if (report != null) {
+                    val document = com.example.kwachawise.data.DocumentEntity(
+                        id = UUID.randomUUID().toString(),
+                        title = title,
+                        content = report,
+                        timestamp = System.currentTimeMillis(),
+                        startDate = startDate,
+                        endDate = endDate
+                    )
+                    repository.saveDocument(document)
+                }
+            } finally {
+                _isGeneratingDocument.value = false
+            }
+        }
+    }
+
     fun markNotificationAsRead(id: String) {
         _notifications.value = _notifications.value.map {
             if (it.id == id) it.copy(isRead = true) else it

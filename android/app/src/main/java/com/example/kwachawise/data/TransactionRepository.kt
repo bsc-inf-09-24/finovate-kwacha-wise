@@ -8,13 +8,24 @@ import kotlinx.coroutines.flow.map
 
 class TransactionRepository(
     private val transactionDao: TransactionDao,
-    private val aiAnalysisDao: AiAnalysisDao
+    private val aiAnalysisDao: AiAnalysisDao,
+    private val documentDao: DocumentDao
 ) {
     val allTransactions: Flow<List<Transaction>> = transactionDao.getAllTransactions()
         .map { entities -> entities.map { it.toDomain() } }
     
     val latestAiAnalysis: Flow<AiAnalysisEntity?> = aiAnalysisDao.getLatestAnalysis()
     val aiAnalysisHistory: Flow<List<AiAnalysisEntity>> = aiAnalysisDao.getAllAnalysis()
+
+    val allDocuments: Flow<List<DocumentEntity>> = documentDao.getAllDocuments()
+
+    suspend fun saveDocument(document: DocumentEntity) {
+        documentDao.insertDocument(document)
+    }
+
+    suspend fun getDocumentById(id: String): DocumentEntity? {
+        return documentDao.getDocumentById(id)
+    }
 
     suspend fun saveAiAnalysis(analysis: AiAnalysisEntity) {
         aiAnalysisDao.insertAnalysis(analysis)
