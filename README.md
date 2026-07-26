@@ -42,7 +42,7 @@ KwachaWise provides a "bookkeeping-on-autopilot" solution. By intercepting trans
 
 ## Live Demo / Showcase
 
-*   **Live App URL:** [TODO: Hyperlink to APK download or Play Store if available]
+*   **Live App URL:** https://bsc-inf-09-24.github.io/finovate-kwacha-wise/
 *   **Demo Description:** Visitors can install the app to experience the automated SMS capture, manual cash entry flow, and the AI-driven insights dashboard.
 *   **Demo Video (5-min):** [TODO: Link to YouTube/Vimeo demo video]
 
@@ -111,7 +111,7 @@ graph TD
 ### Quick Install (Recommended)
 KwachaWise is packaged as an APK for easy installation — no build tools required.
 
-1.  **Download the APK:** [TODO: Paste APK download link here]
+1.  **Download the APK:** https://drive.usercontent.google.com/download?id=1zZKDtGHhpJ6hVS7uKsHHUmSNm8uzdZ36&export=download&authuser=0
 2.  Enable **"Install from Unknown Sources"** in your Android device settings (if prompted).
 3.  Open the downloaded file and follow the on-screen prompts to install.
 4.  Launch KwachaWise and start tracking your business transactions.
