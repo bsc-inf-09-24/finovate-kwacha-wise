@@ -15,16 +15,18 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.kwachawise.models.TransactionTag
+import com.example.kwachawise.models.TransactionType
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddCashEntryScreen(
-    onSave: (Double, String, TransactionTag) -> Unit,
+    onSave: (Double, String, TransactionTag, TransactionType) -> Unit,
     onBack: () -> Unit
 ) {
     var amount by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var selectedTag by remember { mutableStateOf(TransactionTag.PERSONAL) }
+    var selectedType by remember { mutableStateOf(TransactionType.EXPENSE) }
 
     Scaffold(
         topBar = {
@@ -65,6 +67,33 @@ fun AddCashEntryScreen(
 
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
+                    text = "Transaction Type",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    FilterChip(
+                        selected = selectedType == TransactionType.INCOME,
+                        onClick = { selectedType = TransactionType.INCOME },
+                        label = { Text("💰 Income") },
+                        modifier = Modifier.weight(1f)
+                    )
+                    FilterChip(
+                        selected = selectedType == TransactionType.EXPENSE,
+                        onClick = { selectedType = TransactionType.EXPENSE },
+                        label = { Text("💸 Expense") },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(
                     text = "Category",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
@@ -95,7 +124,7 @@ fun AddCashEntryScreen(
             Button(
                 onClick = {
                     val amt = amount.toDoubleOrNull() ?: 0.0
-                    onSave(amt, description, selectedTag)
+                    onSave(amt, description, selectedTag, selectedType)
                 },
                 modifier = Modifier
                     .fillMaxWidth()

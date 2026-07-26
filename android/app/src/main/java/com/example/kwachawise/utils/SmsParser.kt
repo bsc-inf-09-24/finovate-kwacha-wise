@@ -2,6 +2,7 @@ package com.example.kwachawise.utils
 
 import com.example.kwachawise.models.Transaction
 import com.example.kwachawise.models.TransactionTag
+import com.example.kwachawise.models.TransactionType
 import java.util.*
 import java.util.regex.Pattern
 
@@ -10,15 +11,26 @@ object SmsParser {
         val amount = extractAmount(smsBody) ?: return null
         val description = extractDescription(smsBody) ?: "Transaction"
         val date = extractDate(smsBody) ?: "Today"
+        val type = inferType(smsBody)
 
         return Transaction(
             id = UUID.randomUUID().toString(),
             amount = amount,
             description = description,
+            type = type,
             rawText = smsBody,
             tag = TransactionTag.UNSORTED,
             date = date
         )
+    }
+
+    private fun inferType(body: String): TransactionType {
+        val lowerBody = body.lowercase()
+        return when {
+            lowerBody.contains("received") || lowerBody.contains("cash in") -> TransactionType.INCOME
+            lowerBody.contains("paid") || lowerBody.contains("pay ") || lowerBody.contains("spent") -> TransactionType.EXPENSE
+            else -> TransactionType.EXPENSE // Default to expense if unsure
+        }
     }
 
     private fun extractAmount(body: String): Double? {

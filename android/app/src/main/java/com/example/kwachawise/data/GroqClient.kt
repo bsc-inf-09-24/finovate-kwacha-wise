@@ -1,0 +1,74 @@
+package com.example.kwachawise.data
+
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.http.Body
+import retrofit2.http.Header
+import retrofit2.http.POST
+
+data class GroqRequest(
+    val model: String = "llama-3.1-70b-versatile",
+    val messages: List<GroqMessage>
+)
+
+data class GroqMessage(
+    val role: String,
+    val content: String
+)
+
+data class GroqResponse(
+    val choices: List<Choice>
+)
+
+data class Choice(
+    val message: GroqMessage
+)
+
+interface GroqService {
+    @POST("v1/chat/completions")
+    suspend fun getCompletion(
+        @Header("Authorization") apiKey: String,
+        @Body request: GroqRequest
+    ): GroqResponse
+}
+
+object GroqClient {
+    private const val BASE_URL = "https://api.groq.com/openai/"
+    private const val API_KEY = "Bearer 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"
+
+    private val retrofit = Retrofit.Builder()
+        .baseUrl(BASE_URL)
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
+
+    private val service = retrofit.create(GroqService::class.java)
+
+    suspend fun getFinancialInsights(transactionSummary: String): String? {
+        val prompt = """
+            You are a financial advisor for a small business owner in Malawi. 
+            Analyze the following transaction summary and provide:
+            1. A health signal (Healthy, Watch, or Danger).
+            2. 3 actionable recommendations to improve financial health.
+            
+            Return the response in this exact format:
+            SIGNAL: [Healthy/Watch/Danger]
+            ADVICE: [Recommendation 1]
+            ADVICE: [Recommendation 2]
+            ADVICE: [Recommendation 3]
+            
+            Transactions:
+            $transactionSummary
+        """.trimIndent()
+
+        return try {
+            val response = service.getCompletion(
+                API_KEY,
+                GroqRequest(messages = listOf(GroqMessage(role = "user", content = prompt)))
+            )
+            response.choices.firstOrNull()?.message?.content
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+}
