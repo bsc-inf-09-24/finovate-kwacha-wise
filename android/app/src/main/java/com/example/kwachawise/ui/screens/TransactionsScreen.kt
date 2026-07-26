@@ -18,7 +18,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.kwachawise.models.MockData
 import com.example.kwachawise.models.Transaction
 import com.example.kwachawise.models.TransactionTag
 import java.util.Locale
@@ -26,7 +25,7 @@ import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TransactionsScreen(
-    transactions: List<Transaction> = MockData.transactions,
+    transactions: List<Transaction>,
     onBack: () -> Unit
 ) {
     var selectedFilter by remember { mutableStateOf<TransactionTag?>(null) }

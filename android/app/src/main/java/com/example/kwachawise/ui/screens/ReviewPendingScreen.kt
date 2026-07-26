@@ -15,7 +15,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.kwachawise.models.MockData
 import com.example.kwachawise.models.Transaction
 import com.example.kwachawise.models.TransactionTag
 import java.util.Locale
@@ -23,7 +22,7 @@ import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReviewPendingScreen(
-    pendingTransactions: List<Transaction> = MockData.transactions.filter { it.tag == TransactionTag.UNSORTED },
+    pendingTransactions: List<Transaction>,
     onTagTransaction: (String, TransactionTag, String?) -> Unit,
     onBack: () -> Unit
 ) {
