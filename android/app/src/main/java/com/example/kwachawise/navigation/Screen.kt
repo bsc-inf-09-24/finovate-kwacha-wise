@@ -9,4 +9,6 @@ sealed class Screen(val route: String) {
     object AddCashEntry : Screen("add_cash_entry")
     object Insights : Screen("insights")
     object PasteSms : Screen("paste_sms")
+    object Search : Screen("search")
+    object Notifications : Screen("notifications")
 }

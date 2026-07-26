@@ -94,9 +94,11 @@ fun KwachaWiseApp() {
         composable(Screen.Home.route) {
             val balance by viewModel.balance.collectAsState()
             val pendingCount by viewModel.pendingCount.collectAsState()
+            val unreadNotificationsCount by viewModel.unreadNotificationsCount.collectAsState()
             HomeScreen(
                 balance = balance,
                 pendingCount = pendingCount,
+                unreadNotificationsCount = unreadNotificationsCount,
                 onNavigate = { route ->
                     navController.navigate(route)
                 }
@@ -154,6 +156,24 @@ fun KwachaWiseApp() {
                         navController.navigate(Screen.ReviewPending.route)
                     }
                 },
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable(Screen.Search.route) {
+            val query by viewModel.searchQuery.collectAsState()
+            val results by viewModel.searchResults.collectAsState()
+            SearchScreen(
+                query = query,
+                searchResults = results,
+                onQueryChange = { viewModel.updateSearchQuery(it) },
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable(Screen.Notifications.route) {
+            val notifications by viewModel.notifications.collectAsState()
+            NotificationsScreen(
+                notifications = notifications,
+                onNotificationClick = { viewModel.markNotificationAsRead(it) },
                 onBack = { navController.popBackStack() }
             )
         }

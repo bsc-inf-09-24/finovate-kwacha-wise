@@ -31,12 +31,17 @@ import java.util.Locale
 fun HomeScreen(
     balance: Double = 20983.0,
     pendingCount: Int = 2,
+    unreadNotificationsCount: Int = 0,
     onNavigate: (String) -> Unit
 ) {
     Scaffold(
         containerColor = MaterialTheme.colorScheme.primary,
         topBar = {
-            HomeTopBar()
+            HomeTopBar(
+                unreadNotificationsCount = unreadNotificationsCount,
+                onNotificationsClick = { onNavigate(Screen.Notifications.route) },
+                onSearchClick = { onNavigate(Screen.Search.route) }
+            )
         }
     ) { padding ->
         Column(
@@ -108,7 +113,11 @@ fun HomeScreen(
 }
 
 @Composable
-fun HomeTopBar() {
+fun HomeTopBar(
+    unreadNotificationsCount: Int = 0,
+    onNotificationsClick: () -> Unit,
+    onSearchClick: () -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -129,11 +138,21 @@ fun HomeTopBar() {
             }
         }
         Row {
-            IconButton(onClick = {}) {
-                Icon(Icons.Default.Notifications, contentDescription = null, tint = Color.White)
+            IconButton(onClick = onNotificationsClick) {
+                BadgedBox(
+                    badge = {
+                        if (unreadNotificationsCount > 0) {
+                            Badge {
+                                Text(unreadNotificationsCount.toString())
+                            }
+                        }
+                    }
+                ) {
+                    Icon(Icons.Default.Notifications, contentDescription = "Notifications", tint = Color.White)
+                }
             }
-            IconButton(onClick = {}) {
-                Icon(Icons.Default.Search, contentDescription = null, tint = Color.White)
+            IconButton(onClick = onSearchClick) {
+                Icon(Icons.Default.Search, contentDescription = "Search", tint = Color.White)
             }
         }
     }
