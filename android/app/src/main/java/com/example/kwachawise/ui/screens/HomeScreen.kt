@@ -36,7 +36,6 @@ fun HomeScreen(
     balance: Double = 20983.0,
     pendingCount: Int = 2,
     unreadNotificationsCount: Int = 0,
-    onNavigate: (String) -> Unit
     appTheme: AppTheme = AppTheme.SYSTEM,
     onNavigate: (String) -> Unit,
     onThemeToggle: () -> Unit
@@ -48,10 +47,11 @@ fun HomeScreen(
         topBar = {
             HomeTopBar(
                 unreadNotificationsCount = unreadNotificationsCount,
+                appTheme = appTheme,
                 onNotificationsClick = { onNavigate(Screen.Notifications.route) },
-                onSearchClick = { onNavigate(Screen.Search.route) }
+                onSearchClick = { onNavigate(Screen.Search.route) },
+                onThemeToggle = onThemeToggle
             )
-            HomeTopBar(appTheme = appTheme, onThemeToggle = onThemeToggle)
         }
     ) { padding ->
         Column(
@@ -125,10 +125,9 @@ fun HomeScreen(
 @Composable
 fun HomeTopBar(
     unreadNotificationsCount: Int = 0,
-    onNotificationsClick: () -> Unit,
-    onSearchClick: () -> Unit
-) {
     appTheme: AppTheme,
+    onNotificationsClick: () -> Unit,
+    onSearchClick: () -> Unit,
     onThemeToggle: () -> Unit
 ) {
     val assets = ThemeAssets.current()
@@ -152,6 +151,13 @@ fun HomeTopBar(
             }
         }
         Row {
+            IconButton(onClick = onThemeToggle) {
+                Icon(
+                    imageVector = if (appTheme == AppTheme.DARK) Icons.Default.LightMode else Icons.Default.DarkMode,
+                    contentDescription = "Toggle Theme",
+                    tint = Color.White
+                )
+            }
             IconButton(onClick = onNotificationsClick) {
                 BadgedBox(
                     badge = {
@@ -164,15 +170,6 @@ fun HomeTopBar(
                 ) {
                     Icon(Icons.Default.Notifications, contentDescription = "Notifications", tint = Color.White)
                 }
-            IconButton(onClick = onThemeToggle) {
-                Icon(
-                    imageVector = if (appTheme == AppTheme.DARK) Icons.Default.LightMode else Icons.Default.DarkMode,
-                    contentDescription = "Toggle Theme",
-                    tint = Color.White
-                )
-            }
-            IconButton(onClick = {}) {
-                Icon(Icons.Default.Notifications, contentDescription = null, tint = Color.White)
             }
             IconButton(onClick = onSearchClick) {
                 Icon(Icons.Default.Search, contentDescription = "Search", tint = Color.White)

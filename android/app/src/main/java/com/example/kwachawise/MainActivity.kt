@@ -102,25 +102,23 @@ fun KwachaWiseApp(themePreferences: ThemePreferences) {
             })
         }
         composable(Screen.Home.route) {
+            val balance by viewModel.balance.collectAsState()
+            val pendingCount by viewModel.pendingCount.collectAsState()
+            val unreadNotificationsCount by viewModel.unreadNotificationsCount.collectAsState()
+            
             HomeScreen(
+                balance = balance,
+                pendingCount = pendingCount,
+                unreadNotificationsCount = unreadNotificationsCount,
+                appTheme = appTheme,
                 onNavigate = { route ->
                     navController.navigate(route)
                 },
-                appTheme = appTheme,
                 onThemeToggle = {
                     val newTheme = if (appTheme == AppTheme.DARK) AppTheme.LIGHT else AppTheme.DARK
                     coroutineScope.launch {
                         themePreferences.saveTheme(newTheme)
                     }
-            val balance by viewModel.balance.collectAsState()
-            val pendingCount by viewModel.pendingCount.collectAsState()
-            val unreadNotificationsCount by viewModel.unreadNotificationsCount.collectAsState()
-            HomeScreen(
-                balance = balance,
-                pendingCount = pendingCount,
-                unreadNotificationsCount = unreadNotificationsCount,
-                onNavigate = { route ->
-                    navController.navigate(route)
                 }
             )
         }
