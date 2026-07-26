@@ -45,7 +45,9 @@ KwachaWise provides a "bookkeeping-on-autopilot" solution. By intercepting trans
 
 *   **Live App URL:** [https://drive.usercontent.google.com/download?id=1zZKDtGHhpJ6hVS7uKsHHUmSNm8uzdZ36&export=download&authuser=0](https://drive.usercontent.google.com/download?id=1zZKDtGHhpJ6hVS7uKsHHUmSNm8uzdZ36&export=download&authuser=0)
 *   **Demo Description:** Visitors can install the app to experience the automated SMS capture, manual cash entry flow, and the AI-driven insights dashboard.
-*   **Demo Video (5-min):** [TODO: Link to YouTube/Vimeo demo video]
+*   **Demo Video (5-min):**  <a href="resources/videos/demo.mp4">
+    <img src="resources/screenshots/demo-vedio-thumbnail.png" alt="Click to watch demo video" width="480">
+  </a>
 
 ### 📹 Watch This Before You Install
 
@@ -155,9 +157,9 @@ If you want to test the app live in development, modify the code, or contribute,
 
 #### Environment Variables
 The app requires an API key for Groq. In a production environment, this is managed via secure build config or a backend proxy. For the hackathon build:
-1.  Open `android/app/src/main/java/com/example/kwachawise/data/GroqClient.kt`
-2.  Locate the `API_KEY` placeholder.
-3.  Replace with your valid Groq API key: `TODO: SECURE_THIS_DURING_CI`
+1.  create keystore.properties in the android folder
+2.  add your groq api key as defined in the keystore.properties.example file
+
 
 #### Installation Steps
 1.  **Clone the Repo:**
