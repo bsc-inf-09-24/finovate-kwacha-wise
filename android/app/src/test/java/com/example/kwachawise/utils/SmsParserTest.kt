@@ -75,4 +75,22 @@ class SmsParserTest {
         val amount = SmsParser.parseAmount(sms)
         assertEquals(10000.0, amount ?: 0.0, 0.0)
     }
+
+    @Test
+    fun testIncomeDetection() {
+        val interestSms = "You have received interest of MK 500."
+        assertEquals(TransactionType.INCOME, SmsParser.parse(interestSms)?.type)
+        
+        val salarySms = "Salary deposit: MK 500,000."
+        assertEquals(TransactionType.INCOME, SmsParser.parse(salarySms)?.type)
+    }
+
+    @Test
+    fun testExpenseDetection() {
+        val airtimeSms = "You bought airtime for MK 1,000."
+        assertEquals(TransactionType.EXPENSE, SmsParser.parse(airtimeSms)?.type)
+        
+        val billSms = "Bill payment to Water Board MK 20,000."
+        assertEquals(TransactionType.EXPENSE, SmsParser.parse(billSms)?.type)
+    }
 }

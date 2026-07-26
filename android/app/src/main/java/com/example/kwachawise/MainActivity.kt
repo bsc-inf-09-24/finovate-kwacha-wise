@@ -108,8 +108,8 @@ fun KwachaWiseApp() {
             val pendingTransactions by viewModel.pendingTransactions.collectAsState()
             ReviewPendingScreen(
                 pendingTransactions = pendingTransactions,
-                onTagTransaction = { id, tag, note -> 
-                    viewModel.updateTransactionTag(id, tag, note)
+                onTagTransaction = { id, type, tag, note -> 
+                    viewModel.finalizeTransaction(id, type, tag, note)
                     navController.popBackStack()
                 },
                 onBack = { navController.popBackStack() }

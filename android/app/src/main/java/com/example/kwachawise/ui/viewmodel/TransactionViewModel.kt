@@ -9,6 +9,7 @@ import com.example.kwachawise.data.TransactionRepository
 import com.example.kwachawise.models.Notification
 import com.example.kwachawise.models.Transaction
 import com.example.kwachawise.models.TransactionTag
+import com.example.kwachawise.models.TransactionType
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.UUID
@@ -96,9 +97,9 @@ class TransactionViewModel(private val repository: TransactionRepository) : View
         }
     }
 
-    fun updateTransactionTag(transactionId: String, tag: TransactionTag, note: String?) {
+    fun finalizeTransaction(transactionId: String, type: TransactionType, tag: TransactionTag, note: String?) {
         viewModelScope.launch {
-            repository.updateTag(transactionId, tag, note)
+            repository.finalizeTransaction(transactionId, type, tag, note)
         }
     }
 

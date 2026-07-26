@@ -39,10 +39,16 @@ class TransactionRepository(
         transactionDao.insertTransaction(transaction.toEntity())
     }
 
-    suspend fun updateTag(transactionId: String, tag: TransactionTag, note: String?) {
+    suspend fun finalizeTransaction(transactionId: String, type: TransactionType, tag: TransactionTag, note: String?) {
         val entity = transactionDao.getTransactionById(transactionId)
         if (entity != null) {
-            transactionDao.updateTransaction(entity.copy(tag = tag.name, note = note))
+            transactionDao.updateTransaction(
+                entity.copy(
+                    type = type.name,
+                    tag = tag.name, 
+                    note = note
+                )
+            )
         }
     }
 
