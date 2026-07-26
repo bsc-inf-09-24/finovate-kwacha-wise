@@ -1,5 +1,6 @@
 package com.example.kwachawise.data
 
+import android.util.Log
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.Body
@@ -7,7 +8,7 @@ import retrofit2.http.Header
 import retrofit2.http.POST
 
 data class GroqRequest(
-    val model: String = "llama-3.1-70b-versatile",
+    val model: String = "llama-3.3-70b-versatile",
     val messages: List<GroqMessage>
 )
 
@@ -33,6 +34,7 @@ interface GroqService {
 }
 
 object GroqClient {
+    private const val TAG = "GroqClient"
     private const val BASE_URL = "https://api.groq.com/openai/"
     private const val API_KEY = "Bearer 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"
 
@@ -67,7 +69,7 @@ object GroqClient {
             )
             response.choices.firstOrNull()?.message?.content
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e(TAG, "Error fetching insights from Groq", e)
             null
         }
     }

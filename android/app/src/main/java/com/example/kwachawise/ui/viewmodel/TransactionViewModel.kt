@@ -51,7 +51,11 @@ class TransactionViewModel(private val repository: TransactionRepository) : View
                 "${it.date}: ${it.type} ${it.amount} - ${it.description}" 
             }
             val insights = GroqClient.getFinancialInsights(summary)
-            _aiInsights.value = insights
+            if (insights == null) {
+                _aiInsights.value = "SIGNAL: Watch\nADVICE: Unable to connect to AI advisor.\nADVICE: Check your internet connection.\nADVICE: Try again in a few minutes."
+            } else {
+                _aiInsights.value = insights
+            }
         }
     }
 }
