@@ -1,6 +1,7 @@
 package com.example.kwachawise.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -11,6 +12,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -24,7 +26,7 @@ import java.util.Locale
 @Composable
 fun ReviewPendingScreen(
     pendingTransactions: List<Transaction>,
-    onTagTransaction: (String, TransactionTag, String?) -> Unit,
+    onTagTransaction: (String, TransactionType, TransactionTag, String?) -> Unit,
     onBack: () -> Unit
 ) {
     Scaffold(
@@ -50,7 +52,7 @@ fun ReviewPendingScreen(
             items(pendingTransactions) { transaction ->
                 PendingTransactionItem(
                     transaction = transaction,
-                    onTag = { tag, note -> onTagTransaction(transaction.id, tag, note) }
+                    onTag = { type, tag, note -> onTagTransaction(transaction.id, type, tag, note) }
                 )
             }
         }
@@ -60,9 +62,10 @@ fun ReviewPendingScreen(
 @Composable
 fun PendingTransactionItem(
     transaction: Transaction,
-    onTag: (TransactionTag, String?) -> Unit
+    onTag: (TransactionType, TransactionTag, String?) -> Unit
 ) {
     var note by remember { mutableStateOf("") }
+    var selectedType by remember { mutableStateOf(transaction.type) }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -76,19 +79,42 @@ fun PendingTransactionItem(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = if (transaction.type == TransactionType.INCOME) "💰 INCOME" else "💸 EXPENSE",
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = if (transaction.type == TransactionType.INCOME) Color(0xFF4CAF50) else Color(0xFFF44336)
-                )
+                // Type Toggle
+                Row(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "INCOME",
+                        modifier = Modifier
+                            .clickable { selectedType = TransactionType.INCOME }
+                            .background(if (selectedType == TransactionType.INCOME) Color(0xFF4CAF50) else Color.Transparent)
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (selectedType == TransactionType.INCOME) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "EXPENSE",
+                        modifier = Modifier
+                            .clickable { selectedType = TransactionType.EXPENSE }
+                            .background(if (selectedType == TransactionType.EXPENSE) Color(0xFFF44336) else Color.Transparent)
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (selectedType == TransactionType.EXPENSE) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                
                 Text(
                     text = transaction.date,
                     fontSize = 11.sp,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
                 )
             }
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
             Text(
                 text = transaction.rawText ?: "No source text",
                 fontSize = 14.sp,
@@ -105,12 +131,7 @@ fun PendingTransactionItem(
                     text = "K${String.format(Locale.US, "%,.2f", transaction.amount)}",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                Text(
-                    text = transaction.date,
-                    fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                    color = if (selectedType == TransactionType.INCOME) Color(0xFF4CAF50) else MaterialTheme.colorScheme.primary
                 )
             }
             Spacer(modifier = Modifier.height(16.dp))
@@ -125,7 +146,7 @@ fun PendingTransactionItem(
             Spacer(modifier = Modifier.height(16.dp))
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Button(
-                    onClick = { onTag(TransactionTag.BUSINESS, note) },
+                    onClick = { onTag(selectedType, TransactionTag.BUSINESS, note) },
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
@@ -133,7 +154,7 @@ fun PendingTransactionItem(
                     Text("💼 Business")
                 }
                 Button(
-                    onClick = { onTag(TransactionTag.PERSONAL, note) },
+                    onClick = { onTag(selectedType, TransactionTag.PERSONAL, note) },
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)

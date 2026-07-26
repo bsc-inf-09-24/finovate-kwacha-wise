@@ -3,12 +3,16 @@ package com.example.kwachawise.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.example.kwachawise.data.AiAnalysisEntity
 import com.example.kwachawise.data.GroqClient
 import com.example.kwachawise.data.TransactionRepository
+import com.example.kwachawise.models.Notification
 import com.example.kwachawise.models.Transaction
 import com.example.kwachawise.models.TransactionTag
+import com.example.kwachawise.models.TransactionType
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 class TransactionViewModel(private val repository: TransactionRepository) : ViewModel() {
     
@@ -24,12 +28,78 @@ class TransactionViewModel(private val repository: TransactionRepository) : View
     val pendingCount: StateFlow<Int> = pendingTransactions.map { it.size }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
-    private val _aiInsights = MutableStateFlow<String?>(null)
-    val aiInsights: StateFlow<String?> = _aiInsights.asStateFlow()
+    val aiInsights: StateFlow<String?> = repository.latestAiAnalysis
+        .map { it?.result }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+    
+    val aiAnalysisHistory: StateFlow<List<AiAnalysisEntity>> = repository.aiAnalysisHistory
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    fun updateTransactionTag(transactionId: String, tag: TransactionTag, note: String?) {
+    val isNewDataAvailable: StateFlow<Boolean> = combine(
+        sortedTransactions,
+        repository.latestAiAnalysis
+    ) { transactions, latestAnalysis ->
+        if (transactions.isEmpty()) return@combine false
+        if (latestAnalysis == null) return@combine true
+        
+        val currentHash = transactions.hashCode()
+        currentHash != latestAnalysis.transactionHash
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    // Search Logic
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery = _searchQuery.asStateFlow()
+
+    val searchResults: StateFlow<List<Transaction>> = combine(
+        sortedTransactions,
+        _searchQuery
+    ) { transactions, query ->
+        if (query.isBlank()) {
+            emptyList()
+        } else {
+            transactions.filter { 
+                it.description.contains(query, ignoreCase = true) || 
+                it.tag.name.contains(query, ignoreCase = true)
+            }
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    fun updateSearchQuery(query: String) {
+        _searchQuery.value = query
+    }
+
+    // Notifications Logic
+    private val _notifications = MutableStateFlow(
+        listOf(
+            Notification(
+                id = UUID.randomUUID().toString(),
+                title = "New Transaction",
+                message = "You received MK 10,000 from Yamikani.",
+                date = "Today, 10:00 AM"
+            ),
+            Notification(
+                id = UUID.randomUUID().toString(),
+                title = "AI Insight Ready",
+                message = "Your weekly financial report is ready to view.",
+                date = "Yesterday, 6:00 PM"
+            )
+        )
+    )
+    val notifications = _notifications.asStateFlow()
+
+    val unreadNotificationsCount = _notifications.map { list ->
+        list.count { !it.isRead }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
+
+    fun markNotificationAsRead(id: String) {
+        _notifications.value = _notifications.value.map {
+            if (it.id == id) it.copy(isRead = true) else it
+        }
+    }
+
+    fun finalizeTransaction(transactionId: String, type: TransactionType, tag: TransactionTag, note: String?) {
         viewModelScope.launch {
-            repository.updateTag(transactionId, tag, note)
+            repository.finalizeTransaction(transactionId, type, tag, note)
         }
     }
 
@@ -43,7 +113,8 @@ class TransactionViewModel(private val repository: TransactionRepository) : View
         viewModelScope.launch {
             val transactions = sortedTransactions.value
             if (transactions.isEmpty()) {
-                _aiInsights.value = "SIGNAL: Watch\nADVICE: Start recording transactions to get AI insights.\nADVICE: Sort pending SMS entries.\nADVICE: Use 'Add Cash Entry' for manual records."
+                val fallback = "SIGNAL: Watch\nADVICE: Start recording transactions to get AI insights.\nADVICE: Sort pending SMS entries.\nADVICE: Use 'Add Cash Entry' for manual records."
+                repository.saveAiAnalysis(AiAnalysisEntity(UUID.randomUUID().toString(), fallback, System.currentTimeMillis(), transactions.hashCode()))
                 return@launch
             }
 
@@ -52,9 +123,17 @@ class TransactionViewModel(private val repository: TransactionRepository) : View
             }
             val insights = GroqClient.getFinancialInsights(summary)
             if (insights == null) {
-                _aiInsights.value = "SIGNAL: Watch\nADVICE: Unable to connect to AI advisor.\nADVICE: Check your internet connection.\nADVICE: Try again in a few minutes."
+                // We don't save nulls to history, but we could notify UI via a temporary state if needed
+                // For now, let's just keep the last successful analysis
             } else {
-                _aiInsights.value = insights
+                repository.saveAiAnalysis(
+                    AiAnalysisEntity(
+                        id = UUID.randomUUID().toString(),
+                        result = insights,
+                        timestamp = System.currentTimeMillis(),
+                        transactionHash = transactions.hashCode()
+                    )
+                )
             }
         }
     }

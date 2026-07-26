@@ -15,7 +15,8 @@ data class TransactionEntity(
     val rawText: String?,
     val tag: String,
     val date: String,
-    val note: String?
+    val note: String?,
+    val createdAt: Long = System.currentTimeMillis()
 )
 
 fun TransactionEntity.toDomain(): Transaction {
@@ -27,7 +28,8 @@ fun TransactionEntity.toDomain(): Transaction {
         rawText = rawText,
         tag = TransactionTag.valueOf(tag),
         date = date,
-        note = note
+        note = note,
+        createdAt = createdAt
     )
 }
 
@@ -40,6 +42,7 @@ fun Transaction.toEntity(): TransactionEntity {
         rawText = rawText,
         tag = tag.name,
         date = date,
-        note = note
+        note = note,
+        createdAt = createdAt
     )
 }

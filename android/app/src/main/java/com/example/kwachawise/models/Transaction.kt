@@ -16,5 +16,6 @@ data class Transaction(
     val rawText: String? = null,
     val tag: TransactionTag = TransactionTag.UNSORTED,
     val date: String,
-    val note: String? = null
+    val note: String? = null,
+    val createdAt: Long = System.currentTimeMillis()
 )

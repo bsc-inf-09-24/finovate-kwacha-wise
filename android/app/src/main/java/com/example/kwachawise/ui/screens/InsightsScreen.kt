@@ -19,23 +19,27 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.kwachawise.data.AiAnalysisEntity
 import com.example.kwachawise.models.MockData
 import com.example.kwachawise.ui.theme.KwachaSuccess
 import com.example.kwachawise.ui.theme.KwachaWarning
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InsightsScreen(
     healthSignal: String? = null,
+    history: List<AiAnalysisEntity> = emptyList(),
+    isNewDataAvailable: Boolean = true,
     onViewInsights: () -> Unit,
     onBack: () -> Unit
 ) {
     var loading by remember { mutableStateOf(false) }
 
     LaunchedEffect(healthSignal) {
-        if (healthSignal != null) {
-            loading = false
-        }
+        loading = false
     }
 
     val signal = remember(healthSignal) {
@@ -108,9 +112,9 @@ fun InsightsScreen(
                     },
                     modifier = Modifier.fillMaxWidth().height(56.dp),
                     shape = RoundedCornerShape(16.dp),
-                    enabled = !loading
+                    enabled = !loading && isNewDataAvailable
                 ) {
-                    Text("View Insights")
+                    Text(if (isNewDataAvailable) "View Insights" else "Analysis Up to Date")
                 }
             }
         } else {
@@ -145,15 +149,61 @@ fun InsightsScreen(
 
                 item {
                     Spacer(modifier = Modifier.height(24.dp))
-                    OutlinedButton(
-                        onClick = { onViewInsights() },
+                    Button(
+                        onClick = { 
+                            loading = true
+                            onViewInsights() 
+                        },
                         modifier = Modifier.fillMaxWidth().height(56.dp),
-                        shape = RoundedCornerShape(16.dp)
+                        shape = RoundedCornerShape(16.dp),
+                        enabled = !loading && isNewDataAvailable
                     ) {
-                        Text("Refresh Analysis")
+                        Text(if (isNewDataAvailable) "Refresh Analysis" else "Up to Date")
+                    }
+                }
+
+                if (history.isNotEmpty()) {
+                    item {
+                        Text(
+                            text = "History",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    items(history) { analysis ->
+                        HistoryItem(analysis)
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun HistoryItem(analysis: AiAnalysisEntity) {
+    val date = remember(analysis.timestamp) {
+        SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.US).format(Date(analysis.timestamp))
+    }
+    val signal = remember(analysis.result) {
+        analysis.result.lineSequence().find { it.startsWith("SIGNAL:") }
+            ?.substringAfter("SIGNAL:")?.trim() ?: "N/A"
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column {
+                Text(text = date, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(text = "Signal: $signal", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            Icon(Icons.Default.Info, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
         }
     }
 }

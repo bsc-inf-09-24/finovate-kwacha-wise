@@ -6,9 +6,19 @@ import com.example.kwachawise.models.TransactionType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-class TransactionRepository(private val transactionDao: TransactionDao) {
+class TransactionRepository(
+    private val transactionDao: TransactionDao,
+    private val aiAnalysisDao: AiAnalysisDao
+) {
     val allTransactions: Flow<List<Transaction>> = transactionDao.getAllTransactions()
         .map { entities -> entities.map { it.toDomain() } }
+    
+    val latestAiAnalysis: Flow<AiAnalysisEntity?> = aiAnalysisDao.getLatestAnalysis()
+    val aiAnalysisHistory: Flow<List<AiAnalysisEntity>> = aiAnalysisDao.getAllAnalysis()
+
+    suspend fun saveAiAnalysis(analysis: AiAnalysisEntity) {
+        aiAnalysisDao.insertAnalysis(analysis)
+    }
 
     val pendingTransactions: Flow<List<Transaction>> = transactionDao.getTransactionsByTag(TransactionTag.UNSORTED.name)
         .map { entities -> entities.map { it.toDomain() } }
@@ -29,10 +39,16 @@ class TransactionRepository(private val transactionDao: TransactionDao) {
         transactionDao.insertTransaction(transaction.toEntity())
     }
 
-    suspend fun updateTag(transactionId: String, tag: TransactionTag, note: String?) {
+    suspend fun finalizeTransaction(transactionId: String, type: TransactionType, tag: TransactionTag, note: String?) {
         val entity = transactionDao.getTransactionById(transactionId)
         if (entity != null) {
-            transactionDao.updateTransaction(entity.copy(tag = tag.name, note = note))
+            transactionDao.updateTransaction(
+                entity.copy(
+                    type = type.name,
+                    tag = tag.name, 
+                    note = note
+                )
+            )
         }
     }
 

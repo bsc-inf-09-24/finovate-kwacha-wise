@@ -79,7 +79,7 @@ fun KwachaWiseApp(themePreferences: ThemePreferences) {
     val navController = rememberNavController()
     val context = androidx.compose.ui.platform.LocalContext.current
     val database = AppDatabase.getDatabase(context)
-    val repository = TransactionRepository(database.transactionDao())
+    val repository = TransactionRepository(database.transactionDao(), database.aiAnalysisDao())
     val viewModel: TransactionViewModel = viewModel(
         factory = TransactionViewModelFactory(repository)
     )
@@ -114,9 +114,11 @@ fun KwachaWiseApp(themePreferences: ThemePreferences) {
                     }
             val balance by viewModel.balance.collectAsState()
             val pendingCount by viewModel.pendingCount.collectAsState()
+            val unreadNotificationsCount by viewModel.unreadNotificationsCount.collectAsState()
             HomeScreen(
                 balance = balance,
                 pendingCount = pendingCount,
+                unreadNotificationsCount = unreadNotificationsCount,
                 onNavigate = { route ->
                     navController.navigate(route)
                 }
@@ -126,8 +128,8 @@ fun KwachaWiseApp(themePreferences: ThemePreferences) {
             val pendingTransactions by viewModel.pendingTransactions.collectAsState()
             ReviewPendingScreen(
                 pendingTransactions = pendingTransactions,
-                onTagTransaction = { id, tag, note -> 
-                    viewModel.updateTransactionTag(id, tag, note)
+                onTagTransaction = { id, type, tag, note -> 
+                    viewModel.finalizeTransaction(id, type, tag, note)
                     navController.popBackStack()
                 },
                 onBack = { navController.popBackStack() }
@@ -159,8 +161,12 @@ fun KwachaWiseApp(themePreferences: ThemePreferences) {
         }
         composable(Screen.Insights.route) {
             val insights by viewModel.aiInsights.collectAsState()
+            val history by viewModel.aiAnalysisHistory.collectAsState()
+            val isNewDataAvailable by viewModel.isNewDataAvailable.collectAsState()
             InsightsScreen(
                 healthSignal = insights,
+                history = history,
+                isNewDataAvailable = isNewDataAvailable,
                 onViewInsights = { viewModel.fetchAiInsights() },
                 onBack = { navController.popBackStack() }
             )
@@ -174,6 +180,24 @@ fun KwachaWiseApp(themePreferences: ThemePreferences) {
                         navController.navigate(Screen.ReviewPending.route)
                     }
                 },
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable(Screen.Search.route) {
+            val query by viewModel.searchQuery.collectAsState()
+            val results by viewModel.searchResults.collectAsState()
+            SearchScreen(
+                query = query,
+                searchResults = results,
+                onQueryChange = { viewModel.updateSearchQuery(it) },
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable(Screen.Notifications.route) {
+            val notifications by viewModel.notifications.collectAsState()
+            NotificationsScreen(
+                notifications = notifications,
+                onNotificationClick = { viewModel.markNotificationAsRead(it) },
                 onBack = { navController.popBackStack() }
             )
         }

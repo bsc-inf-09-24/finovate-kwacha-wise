@@ -90,8 +90,25 @@ object SmsParser {
     private fun inferType(body: String): TransactionType {
         val lowerBody = body.lowercase()
         return when {
-            lowerBody.contains("received") || lowerBody.contains("cash in") -> TransactionType.INCOME
-            lowerBody.contains("paid") || lowerBody.contains("spent") || lowerBody.contains("sent") -> TransactionType.EXPENSE
+            lowerBody.contains("received") || 
+            lowerBody.contains("cash in") || 
+            lowerBody.contains("interest") || 
+            lowerBody.contains("salary") || 
+            lowerBody.contains("deposit") || 
+            lowerBody.contains("credit") || 
+            lowerBody.contains("transferred from") -> TransactionType.INCOME
+            
+            lowerBody.contains("paid") || 
+            lowerBody.contains("spent") || 
+            lowerBody.contains("sent") || 
+            lowerBody.contains("cash out") || 
+            lowerBody.contains("bill payment") || 
+            lowerBody.contains("airtime") || 
+            lowerBody.contains("debit") || 
+            lowerBody.contains("charge") || 
+            lowerBody.contains("tax") || 
+            lowerBody.contains("levy") -> TransactionType.EXPENSE
+            
             else -> TransactionType.EXPENSE
         }
     }
