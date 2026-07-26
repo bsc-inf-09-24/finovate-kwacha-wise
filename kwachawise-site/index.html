@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kwacha Wize — Your SMS already knows your numbers</title>
+<meta name="description" content="Kwacha Wize turns every mobile money and bank SMS into a clean, tagged financial record automatically — helping Malawian micro-entrepreneurs become credit-ready.">
+<link rel="icon" href="assets/logo/icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="nav" id="nav">
+  <div class="wrap nav-inner">
+    <a href="#top" class="brand">
+      <img src="assets/logo/lockup.png" alt="Kwacha Wize" class="brand-lockup">
+    </a>
+    <nav class="nav-links">
+      <a href="#how">How it works</a>
+      <a href="#features">Features</a>
+      <a href="#screens">Screens</a>
+      <a href="#team">Team</a>
+    </nav>
+    <a href="#download" class="btn btn-primary btn-small">Download</a>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="wrap hero-inner">
+      <div class="hero-copy">
+        <span class="eyebrow">Android · built in 48 hours</span>
+        <h1>Your SMS already knows your numbers.</h1>
+        <p class="lede">
+          Every Airtel Money, TNM Mpamba and bank alert already contains your
+          transaction history — it's just scattered across your inbox.
+          Kwacha Wize reads it automatically, lets you tag business from
+          personal in one tap, and turns the result into the kind of record
+          a lender can actually trust.
+        </p>
+        <div class="hero-ctas">
+          <a href="#download" class="btn btn-primary">Download for Android</a>
+          <a href="https://github.com/" class="btn btn-ghost" id="source-link">View source</a>
+        </div>
+        <p class="hero-note">Works offline</p>
+      </div>
+
+      <div class="hero-visual">
+        <div class="phone-frame phone-hero">
+          <img src="assets/screens/home.png" alt="Kwacha Wize home screen showing available balance and quick actions">
+        </div>
+        <div class="float-card float-card--top" aria-hidden="true">
+          <span class="float-card-label">SMS received</span>
+          <span class="float-card-mono">Bal: 6,153.82MWK</span>
+        </div>
+        <div class="float-card float-card--bottom" aria-hidden="true">
+          <span class="tag tag--business">💼 Business</span>
+          <span class="float-card-amount">+K5,000.00</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LEDGER TICKER — signature element -->
+  <section class="ticker-section" id="ticker" aria-label="Live example of messages becoming tagged transactions">
+    <div class="ticker-mask">
+      <div class="ticker-track" id="tickerTrack"><!-- filled by script.js --></div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="how" id="how">
+    <div class="wrap">
+      <h2>Store first. Sort second. Enrich with AI last.</h2>
+      <p class="section-sub">
+        Classification is a deliberate, later decision made by you — never an
+        AI guess made in the background. That keeps every record accurate.
+      </p>
+
+      <ol class="steps">
+        <li class="step">
+          <span class="step-index">01</span>
+          <h3>Capture</h3>
+          <p>A background listener saves every incoming money SMS the instant it arrives — zero effort, nothing typed.</p>
+        </li>
+        <li class="step">
+          <span class="step-index">02</span>
+          <h3>Review</h3>
+          <p>Unsorted transactions wait in one queue. Cash sales with no SMS trail can be logged by hand from the same screen.</p>
+        </li>
+        <li class="step">
+          <span class="step-index">03</span>
+          <h3>Tag</h3>
+          <p>Mark each entry 💼 Business or 🏠 Personal, add a short note, done. This is the only manual step in the whole flow.</p>
+        </li>
+        <li class="step">
+          <span class="step-index">04</span>
+          <h3>Understand</h3>
+          <p>On demand, tagged records are summarized into a plain financial health signal and three next actions.</p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="features" id="features">
+    <div class="wrap">
+      <h2>Built for how money actually moves</h2>
+
+      <div class="feature-grid">
+        <article class="feature-card">
+          <div class="feature-icon">📩</div>
+          <h3>Automatic capture</h3>
+          <p>Airtel Money, TNM Mpamba and bank alerts are parsed the moment they land — no forwarding, no screenshots.</p>
+        </article>
+        <article class="feature-card">
+          <div class="feature-icon">💵</div>
+          <h3>Cash, covered</h3>
+          <p>Not every transaction leaves a paper trail. Log a cash sale or purchase directly, tagged as you enter it.</p>
+        </article>
+        <article class="feature-card">
+          <div class="feature-icon">🔀</div>
+          <h3>One-tap separation</h3>
+          <p>Business and personal spending sit in the same wallet in real life. Kwacha Wize keeps them apart on paper.</p>
+        </article>
+        <article class="feature-card">
+          <div class="feature-icon">📈</div>
+          <h3>A health signal, not a guess</h3>
+          <p>Ask for insights and get a plain Healthy / Watch / At Risk signal plus three concrete recommendations — never a blank screen, even offline.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCREENSHOTS -->
+  <section class="screens" id="screens">
+    <div class="wrap">
+      <h2>A look inside</h2>
+
+      <div class="screens-tabs" id="screensTabs" role="tablist" aria-label="App screens">
+        <button class="screens-tab is-active" role="tab" aria-selected="true" data-target="home">Home</button>
+        <button class="screens-tab" role="tab" aria-selected="false" data-target="transactions">Transactions</button>
+        <button class="screens-tab" role="tab" aria-selected="false" data-target="add-cash">Add cash entry</button>
+        <button class="screens-tab" role="tab" aria-selected="false" data-target="paste-sms">Paste SMS</button>
+      </div>
+
+      <div class="screens-stage">
+        <div class="phone-frame phone-gallery">
+          <img id="screensImg" src="assets/screens/home.png" alt="Kwacha Wize home screen">
+        </div>
+        <p class="screens-caption" id="screensCaption">
+          Balance, pending reviews and every action, one tap from the top.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- DOWNLOAD -->
+  <section class="download" id="download">
+    <div class="wrap download-inner">
+      <img src="assets/logo/icon.png" alt="" class="download-icon" aria-hidden="true">
+      <h2>Get Kwacha Wize on your phone</h2>
+      <p>Android · APK, sideloaded install. No Play Store account needed.</p>
+      <a href="#" class="btn btn-primary btn-large" id="download-link">Download APK</a>
+      <p class="download-note">
+        v1.0 · <span id="apkSize">~12&nbsp;MB</span> · Requires SMS permission to auto-capture transactions
+      </p>
+    </div>
+  </section>
+
+</main>
+
+<!-- TEAM / FOOTER -->
+<footer class="footer" id="team">
+  <div class="wrap footer-inner">
+    <div class="footer-brand">
+      <img src="assets/logo/lockup.png" alt="Kwacha Wize" class="brand-lockup">
+      <p>Financial inclusion through intelligent, automated record-keeping.<br>Built in a 48-hour hackathon.</p>
+    </div>
+
+    <div class="footer-team">
+      <h4>Team</h4>
+      <ul>
+        <li><span class="name">Mike Prosper Kamanga</span><span class="role">UI/UX Designer &amp; Developer</span></li>
+        <li><span class="name">Patrick Solomon</span><span class="role">Developer</span></li>
+        <li><span class="name">Thokozani Mofolo</span><span class="role">Project Manager / Communicator (Group Leader)</span></li>
+        <li><span class="name">Denis Decal</span><span class="role">Business Strategist</span></li>
+        <li><span class="name">Dominic Smith</span><span class="role">Researcher</span></li>
+      </ul>
+    </div>
+  </div>
+  <div class="wrap footer-bottom">
+    <span>© 2026 Kwacha Wize</span>
+    <a href="https://github.com/">GitHub</a>
+  </div>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>
