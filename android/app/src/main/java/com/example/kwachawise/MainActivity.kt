@@ -79,7 +79,11 @@ fun KwachaWiseApp(themePreferences: ThemePreferences) {
     val navController = rememberNavController()
     val context = androidx.compose.ui.platform.LocalContext.current
     val database = AppDatabase.getDatabase(context)
-    val repository = TransactionRepository(database.transactionDao(), database.aiAnalysisDao())
+    val repository = TransactionRepository(
+        database.transactionDao(),
+        database.aiAnalysisDao(),
+        database.documentDao()
+    )
     val viewModel: TransactionViewModel = viewModel(
         factory = TransactionViewModelFactory(repository)
     )
@@ -134,9 +138,16 @@ fun KwachaWiseApp(themePreferences: ThemePreferences) {
             )
         }
         composable(Screen.Transactions.route) {
-            val transactions by viewModel.sortedTransactions.collectAsState()
+            val groupedTransactions by viewModel.filteredTransactions.collectAsState()
+            val searchQuery by viewModel.searchQuery.collectAsState()
+            val selectedTag by viewModel.selectedTag.collectAsState()
+            
             TransactionsScreen(
-                transactions = transactions,
+                groupedTransactions = groupedTransactions,
+                searchQuery = searchQuery,
+                selectedFilter = selectedTag,
+                onQueryChange = { viewModel.updateSearchQuery(it) },
+                onFilterSelected = { viewModel.setSelectedTag(it) },
                 onBack = { navController.popBackStack() }
             )
         }
@@ -166,6 +177,27 @@ fun KwachaWiseApp(themePreferences: ThemePreferences) {
                 history = history,
                 isNewDataAvailable = isNewDataAvailable,
                 onViewInsights = { viewModel.fetchAiInsights() },
+                onViewDocuments = { navController.navigate(Screen.Documents.route) },
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable(Screen.Documents.route) {
+            val documents by viewModel.allDocuments.collectAsState()
+            val isGenerating by viewModel.isGeneratingDocument.collectAsState()
+            DocumentListScreen(
+                documents = documents,
+                isGenerating = isGenerating,
+                onGenerate = { start, end, title -> viewModel.generateDocument(start, end, title) },
+                onDocumentClick = { id -> navController.navigate(Screen.DocumentDetail.createRoute(id)) },
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable(Screen.DocumentDetail.route) { backStackEntry ->
+            val documentId = backStackEntry.arguments?.getString("documentId")
+            val documents by viewModel.allDocuments.collectAsState()
+            val document = documents.find { it.id == documentId }
+            DocumentDetailScreen(
+                document = document,
                 onBack = { navController.popBackStack() }
             )
         }

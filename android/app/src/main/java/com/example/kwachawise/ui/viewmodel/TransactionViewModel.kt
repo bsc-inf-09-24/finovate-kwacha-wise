@@ -10,10 +10,12 @@ import com.example.kwachawise.models.Notification
 import com.example.kwachawise.models.Transaction
 import com.example.kwachawise.models.TransactionTag
 import com.example.kwachawise.models.TransactionType
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.UUID
 
+@OptIn(FlowPreview::class)
 class TransactionViewModel(private val repository: TransactionRepository) : ViewModel() {
     
     val pendingTransactions: StateFlow<List<Transaction>> = repository.pendingTransactions
@@ -46,13 +48,16 @@ class TransactionViewModel(private val repository: TransactionRepository) : View
         currentHash != latestAnalysis.transactionHash
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
-    // Search Logic
+    // Search and Filtering Logic
     private val _searchQuery = MutableStateFlow("")
     val searchQuery = _searchQuery.asStateFlow()
 
+    private val _selectedTag = MutableStateFlow<TransactionTag?>(null)
+    val selectedTag = _selectedTag.asStateFlow()
+
     val searchResults: StateFlow<List<Transaction>> = combine(
         sortedTransactions,
-        _searchQuery
+        _searchQuery.debounce(300)
     ) { transactions, query ->
         if (query.isBlank()) {
             emptyList()
@@ -64,8 +69,31 @@ class TransactionViewModel(private val repository: TransactionRepository) : View
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    val filteredTransactions: StateFlow<Map<String, List<Transaction>>> = combine(
+        sortedTransactions,
+        _searchQuery.debounce(300),
+        _selectedTag
+    ) { transactions, query, tag ->
+        val filtered = transactions.filter { transaction ->
+            val matchesQuery = query.isBlank() || 
+                    transaction.description.contains(query, ignoreCase = true) ||
+                    transaction.tag.name.contains(query, ignoreCase = true)
+            
+            val matchesTag = tag == null || transaction.tag == tag
+            
+            matchesQuery && matchesTag
+        }
+        
+        // Grouping logic
+        filtered.groupBy { com.example.kwachawise.utils.DateTimeUtils.getDayHeader(it.createdAt) }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
+
     fun updateSearchQuery(query: String) {
         _searchQuery.value = query
+    }
+
+    fun setSelectedTag(tag: TransactionTag?) {
+        _selectedTag.value = tag
     }
 
     // Notifications Logic
@@ -90,6 +118,50 @@ class TransactionViewModel(private val repository: TransactionRepository) : View
     val unreadNotificationsCount = _notifications.map { list ->
         list.count { !it.isRead }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
+
+    // Documents logic
+    val allDocuments = repository.allDocuments
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    private val _isGeneratingDocument = MutableStateFlow(false)
+    val isGeneratingDocument = _isGeneratingDocument.asStateFlow()
+
+    fun generateDocument(startDate: Long, endDate: Long, title: String) {
+        viewModelScope.launch {
+            _isGeneratingDocument.value = true
+            try {
+                val transactions = sortedTransactions.value.filter {
+                    it.createdAt in startDate..endDate
+                }
+
+                if (transactions.isEmpty()) {
+                    // Handle empty state if needed
+                    return@launch
+                }
+
+                val summary = transactions.joinToString("\n") {
+                    "${com.example.kwachawise.utils.DateTimeUtils.formatDate(it.createdAt)}: ${it.type} ${it.amount} - ${it.description}"
+                }
+
+                val periodStr = "${com.example.kwachawise.utils.DateTimeUtils.formatDate(startDate)} to ${com.example.kwachawise.utils.DateTimeUtils.formatDate(endDate)}"
+                val report = GroqClient.generateBankReport("Amikhy's Business", periodStr, summary)
+
+                if (report != null) {
+                    val document = com.example.kwachawise.data.DocumentEntity(
+                        id = UUID.randomUUID().toString(),
+                        title = title,
+                        content = report,
+                        timestamp = System.currentTimeMillis(),
+                        startDate = startDate,
+                        endDate = endDate
+                    )
+                    repository.saveDocument(document)
+                }
+            } finally {
+                _isGeneratingDocument.value = false
+            }
+        }
+    }
 
     fun markNotificationAsRead(id: String) {
         _notifications.value = _notifications.value.map {

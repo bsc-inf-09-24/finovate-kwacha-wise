@@ -109,7 +109,7 @@ fun PendingTransactionItem(
                 }
                 
                 Text(
-                    text = transaction.date,
+                    text = com.example.kwachawise.utils.DateTimeUtils.formatDateTime(transaction.createdAt),
                     fontSize = 11.sp,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
                 )

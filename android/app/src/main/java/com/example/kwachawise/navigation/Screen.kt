@@ -11,4 +11,8 @@ sealed class Screen(val route: String) {
     object PasteSms : Screen("paste_sms")
     object Search : Screen("search")
     object Notifications : Screen("notifications")
+    object Documents : Screen("documents")
+    object DocumentDetail : Screen("document_detail/{documentId}") {
+        fun createRoute(documentId: String) = "document_detail/$documentId"
+    }
 }
