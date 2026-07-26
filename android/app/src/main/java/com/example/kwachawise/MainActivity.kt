@@ -7,11 +7,11 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.*
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
@@ -32,14 +32,12 @@ import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
+    private var showRationale by mutableStateOf(false)
+
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
-    ) { isGranted: Boolean ->
-        if (isGranted) {
-            // Permission granted
-        } else {
-            // Permission denied
-        }
+    ) { _ ->
+        // Handle result if needed
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -54,6 +52,15 @@ class MainActivity : ComponentActivity() {
             val appTheme by themePreferences.themeFlow.collectAsState(initial = AppTheme.SYSTEM)
             
             KwachaWiseTheme(appTheme = appTheme) {
+                if (showRationale) {
+                    PermissionRationaleDialog(
+                        onConfirm = {
+                            showRationale = false
+                            requestPermissionLauncher.launch(Manifest.permission.RECEIVE_SMS)
+                        },
+                        onDismiss = { showRationale = false }
+                    )
+                }
                 KwachaWiseApp(themePreferences = themePreferences)
             }
         }
@@ -61,17 +68,32 @@ class MainActivity : ComponentActivity() {
 
     private fun checkSmsPermission() {
         when {
-            ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.RECEIVE_SMS
-            ) == PackageManager.PERMISSION_GRANTED -> {
-                // Permission already granted
+            ContextCompat.checkSelfPermission(this, Manifest.permission.RECEIVE_SMS) == PackageManager.PERMISSION_GRANTED -> {
+                // Already have permission
+            }
+            ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.RECEIVE_SMS) -> {
+                showRationale = true
             }
             else -> {
                 requestPermissionLauncher.launch(Manifest.permission.RECEIVE_SMS)
             }
         }
     }
+}
+
+@Composable
+fun PermissionRationaleDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Automate Your Records") },
+        text = { Text("KwachaWise can automatically detect Airtel Money and Mpamba transactions from your SMS alerts. This saves you from manual bookkeeping. We only read transaction alerts.") },
+        confirmButton = {
+            TextButton(onClick = onConfirm) { Text("Allow") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("No thanks") }
+        }
+    )
 }
 
 @Composable

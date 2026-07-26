@@ -1,6 +1,7 @@
 package com.example.kwachawise.data
 
 import android.util.Log
+import com.example.kwachawise.BuildConfig
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.Body
@@ -36,7 +37,8 @@ interface GroqService {
 object GroqClient {
     private const val TAG = "GroqClient"
     private const val BASE_URL = "https://api.groq.com/openai/"
-    private const val API_KEY = "Bearer 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"
+    // Pulled from git-ignored keystore.properties via BuildConfig
+    private val API_KEY = "Bearer ${BuildConfig.GROQ_API_KEY}"
 
     private val retrofit = Retrofit.Builder()
         .baseUrl(BASE_URL)

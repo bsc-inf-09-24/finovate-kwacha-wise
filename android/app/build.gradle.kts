@@ -25,6 +25,10 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Inject API Key from keystore.properties
+        val groqApiKey = keystoreProperties["groq_api_key"] as String? ?: ""
+        buildConfigField("String", "GROQ_API_KEY", "\"$groqApiKey\"")
     }
 
     signingConfigs {
@@ -58,6 +62,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
