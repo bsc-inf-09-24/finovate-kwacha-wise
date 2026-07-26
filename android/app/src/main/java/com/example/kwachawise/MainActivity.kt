@@ -134,9 +134,16 @@ fun KwachaWiseApp(themePreferences: ThemePreferences) {
             )
         }
         composable(Screen.Transactions.route) {
-            val transactions by viewModel.sortedTransactions.collectAsState()
+            val groupedTransactions by viewModel.filteredTransactions.collectAsState()
+            val searchQuery by viewModel.searchQuery.collectAsState()
+            val selectedTag by viewModel.selectedTag.collectAsState()
+            
             TransactionsScreen(
-                transactions = transactions,
+                groupedTransactions = groupedTransactions,
+                searchQuery = searchQuery,
+                selectedFilter = selectedTag,
+                onQueryChange = { viewModel.updateSearchQuery(it) },
+                onFilterSelected = { viewModel.setSelectedTag(it) },
                 onBack = { navController.popBackStack() }
             )
         }
