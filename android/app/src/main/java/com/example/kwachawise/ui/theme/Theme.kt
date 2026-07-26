@@ -5,7 +5,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
+import com.example.kwachawise.data.AppTheme
 
 private val DarkColorScheme = darkColorScheme(
     primary = KwachaPrimary,
@@ -15,7 +17,8 @@ private val DarkColorScheme = darkColorScheme(
     onPrimary = Color.White,
     onSecondary = Color.Black,
     onBackground = Color.White,
-    onSurface = Color.White
+    onSurface = Color.White,
+    error = KwachaError
 )
 
 private val LightColorScheme = lightColorScheme(
@@ -26,19 +29,31 @@ private val LightColorScheme = lightColorScheme(
     onPrimary = Color.White,
     onSecondary = Color.Black,
     onBackground = KwachaOnBackground,
-    onSurface = KwachaOnSurface
+    onSurface = KwachaOnSurface,
+    error = KwachaError
 )
 
 @Composable
 fun KwachaWiseTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    appTheme: AppTheme = AppTheme.SYSTEM,
     content: @Composable () -> Unit
 ) {
+    val darkTheme = when (appTheme) {
+        AppTheme.LIGHT -> false
+        AppTheme.DARK -> true
+        AppTheme.SYSTEM -> isSystemInDarkTheme()
+    }
+    
     val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
+    val assets = ThemeAssets.getAssets(isDark = darkTheme)
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        content = content
-    )
+    CompositionLocalProvider(
+        LocalKwachaAssets provides assets
+    ) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = Typography,
+            content = content
+        )
+    }
 }

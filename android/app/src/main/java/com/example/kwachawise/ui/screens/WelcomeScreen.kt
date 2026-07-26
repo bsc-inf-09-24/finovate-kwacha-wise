@@ -13,10 +13,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.kwachawise.R
+import com.example.kwachawise.ui.theme.ThemeAssets
 
 @Composable
 fun WelcomeScreen(onStartClicked: () -> Unit) {
+    val assets = ThemeAssets.current()
+    
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -28,9 +30,9 @@ fun WelcomeScreen(onStartClicked: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // Brand Logo / Wordmark
+            // Theme-aware Brand Wordmark
             Image(
-                painter = painterResource(id = R.drawable.logo_wordmark),
+                painter = painterResource(id = assets.wordmark),
                 contentDescription = "KwachaWise",
                 modifier = Modifier
                     .fillMaxWidth(0.6f)

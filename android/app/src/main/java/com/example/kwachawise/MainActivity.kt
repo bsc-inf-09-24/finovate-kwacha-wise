@@ -10,21 +10,25 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.kwachawise.data.AppDatabase
+import com.example.kwachawise.data.AppTheme
+import com.example.kwachawise.data.ThemePreferences
 import com.example.kwachawise.data.TransactionRepository
 import com.example.kwachawise.models.Transaction
-import com.example.kwachawise.models.TransactionTag
 import com.example.kwachawise.navigation.Screen
 import com.example.kwachawise.ui.screens.*
 import com.example.kwachawise.ui.theme.KwachaWiseTheme
 import com.example.kwachawise.ui.viewmodel.TransactionViewModel
 import com.example.kwachawise.ui.viewmodel.TransactionViewModelFactory
 import com.example.kwachawise.utils.SmsParser
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
@@ -44,9 +48,13 @@ class MainActivity : ComponentActivity() {
         
         checkSmsPermission()
         
+        val themePreferences = ThemePreferences(this)
+        
         setContent {
-            KwachaWiseTheme {
-                KwachaWiseApp()
+            val appTheme by themePreferences.themeFlow.collectAsState(initial = AppTheme.SYSTEM)
+            
+            KwachaWiseTheme(appTheme = appTheme) {
+                KwachaWiseApp(themePreferences = themePreferences)
             }
         }
     }
@@ -67,7 +75,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun KwachaWiseApp() {
+fun KwachaWiseApp(themePreferences: ThemePreferences) {
     val navController = rememberNavController()
     val context = androidx.compose.ui.platform.LocalContext.current
     val database = AppDatabase.getDatabase(context)
@@ -75,6 +83,8 @@ fun KwachaWiseApp() {
     val viewModel: TransactionViewModel = viewModel(
         factory = TransactionViewModelFactory(repository)
     )
+    val appTheme by themePreferences.themeFlow.collectAsState(initial = AppTheme.SYSTEM)
+    val coroutineScope = rememberCoroutineScope()
     
     NavHost(navController = navController, startDestination = Screen.Splash.route) {
         composable(Screen.Splash.route) {
@@ -92,6 +102,16 @@ fun KwachaWiseApp() {
             })
         }
         composable(Screen.Home.route) {
+            HomeScreen(
+                onNavigate = { route ->
+                    navController.navigate(route)
+                },
+                appTheme = appTheme,
+                onThemeToggle = {
+                    val newTheme = if (appTheme == AppTheme.DARK) AppTheme.LIGHT else AppTheme.DARK
+                    coroutineScope.launch {
+                        themePreferences.saveTheme(newTheme)
+                    }
             val balance by viewModel.balance.collectAsState()
             val pendingCount by viewModel.pendingCount.collectAsState()
             val unreadNotificationsCount by viewModel.unreadNotificationsCount.collectAsState()
