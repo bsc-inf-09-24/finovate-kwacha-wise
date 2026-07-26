@@ -21,10 +21,11 @@
 5. [Technologies Used](#technologies-used)
 6. [Architecture](#architecture)
 7. [Setup & Installation](#setup--installation)
-8. [Business Model Summary](#business-model-summary)
-9. [Challenges & Lessons Learned](#challenges--lessons-learned)
-10. [AI Usage Disclosure](#ai-usage-disclosure)
-11. [Team & Contribution](#team--contribution)
+8. [Known Issues & Installation Notes](#known-issues--installation-notes)
+9. [Business Model Summary](#business-model-summary)
+10. [Challenges & Lessons Learned](#challenges--lessons-learned)
+11. [AI Usage Disclosure](#ai-usage-disclosure)
+12. [Team & Contribution](#team--contribution)
 
 ---
 
@@ -42,9 +43,34 @@ KwachaWise provides a "bookkeeping-on-autopilot" solution. By intercepting trans
 
 ## Live Demo / Showcase
 
-*   **Live App URL:** https://bsc-inf-09-24.github.io/finovate-kwacha-wise/
+*   **Live App URL:** [https://drive.usercontent.google.com/download?id=1zZKDtGHhpJ6hVS7uKsHHUmSNm8uzdZ36&export=download&authuser=0](https://drive.usercontent.google.com/download?id=1zZKDtGHhpJ6hVS7uKsHHUmSNm8uzdZ36&export=download&authuser=0)
 *   **Demo Description:** Visitors can install the app to experience the automated SMS capture, manual cash entry flow, and the AI-driven insights dashboard.
-*   **Demo Video (5-min):** [TODO: Link to YouTube/Vimeo demo video]
+*   **Demo Video (5-min):**  <a href="resources/videos/demo.mp4">
+    <img src="resources/screenshots/demo-vedio-thumbnail.png" alt="Click to watch demo video" width="480">
+  </a>
+
+### 📹 Watch This Before You Install
+
+Google Play Protect will show a warning screen for this app since it isn't
+distributed through the Play Store (see [Known Issues](#known-issues--installation-notes)
+for why). Before downloading, watch this **30-second walkthrough** showing
+exactly how to get past that screen safely:
+
+<p align="center">
+  <a href="resources/videos/how-to-install-apk.mp4">
+    <img src="resources/screenshots/install-video-thumbnail.jpg" alt="How to install KwachaWise despite the Play Protect warning — click to watch" width="480">
+  </a>
+  <br>
+  <em>▶ Click the image above to play the install walkthrough video</em>
+  <br>
+  <a href="resources/videos/how-to-install-apk.mp4">Or open the video file directly</a>
+</p>
+
+> **Note for judges/reviewers:** GitHub does not play video files inline on
+> the repository page — clicking the thumbnail or link above will download
+> or open the `.mp4` in a new tab depending on your browser. If you're
+> viewing this repo locally or have cloned it, the file is at
+> `resources/videos/how-to-install-apk.mp4`.
 
 ---
 
@@ -109,14 +135,16 @@ graph TD
 ## Setup & Installation
 
 ### Quick Install (Recommended)
-KwachaWise is packaged as an APK for easy installation — no build tools required.
+KwachaWise is packaged as a signed APK for easy installation — no build tools required.
 
-1.  **Download the APK:** https://drive.usercontent.google.com/download?id=1zZKDtGHhpJ6hVS7uKsHHUmSNm8uzdZ36&export=download&authuser=0
+1.  **Download the APK:** [https://drive.usercontent.google.com/download?id=1zZKDtGHhpJ6hVS7uKsHHUmSNm8uzdZ36&export=download&authuser=0](https://drive.usercontent.google.com/download?id=1zZKDtGHhpJ6hVS7uKsHHUmSNm8uzdZ36&export=download&authuser=0)
 2.  Enable **"Install from Unknown Sources"** in your Android device settings (if prompted).
 3.  Open the downloaded file and follow the on-screen prompts to install.
 4.  Launch KwachaWise and start tracking your business transactions.
 
 > **Note:** The AI Financial Health Insights feature requires an internet connection to reach the Groq API. All other features work fully offline.
+
+> **⚠️ Heads up:** Depending on your device, Google Play Protect may show an "App blocked to protect your device" warning before installation completes. This is expected for any app distributed outside the Play Store and does **not** indicate a problem with the APK itself. **[Watch the 30-second install walkthrough video](#-watch-this-before-you-install)** above, or see [Known Issues & Installation Notes](#known-issues--installation-notes) below for the full explanation.
 
 ### Running from Source (For Developers)
 If you want to test the app live in development, modify the code, or contribute, follow these steps instead:
@@ -129,9 +157,9 @@ If you want to test the app live in development, modify the code, or contribute,
 
 #### Environment Variables
 The app requires an API key for Groq. In a production environment, this is managed via secure build config or a backend proxy. For the hackathon build:
-1.  Open `android/app/src/main/java/com/example/kwachawise/data/GroqClient.kt`
-2.  Locate the `API_KEY` placeholder.
-3.  Replace with your valid Groq API key: `TODO: SECURE_THIS_DURING_CI`
+1.  create keystore.properties in the android folder
+2.  add your groq api key as defined in the keystore.properties.example file
+
 
 #### Installation Steps
 1.  **Clone the Repo:**
@@ -146,6 +174,74 @@ The app requires an API key for Groq. In a production environment, this is manag
     ```bash
     ./gradlew installDebug
     ```
+
+---
+
+## Known Issues & Installation Notes
+
+### Google Play Protect Warning on Install
+
+Because KwachaWise is distributed as a directly signed APK (via Google Drive
+and GitHub Releases) rather than through the Google Play Store, **Google
+Play Protect may display a warning during installation**, similar to:
+
+> "App blocked to protect your device — This app can request access to
+> sensitive data. This can increase the risk of identity theft or
+> financial fraud."
+
+**This is expected behavior and not a defect in the app.** It is important
+to understand why this happens and what it does — and does not — mean.
+
+**Why it happens:**
+Play Protect uses a cloud-based reputation system that scores APKs based on
+install history and permission profile, independent of code quality or
+intent. Two factors specifically trigger this for KwachaWise:
+
+1.  **No Play Store install history.** Any APK that has not been uploaded
+    to Google Play — including ours, which is signed and distributed
+    independently — has zero reputation data attached to its signing
+    certificate. Google's heuristic defaults to caution for unrecognized
+    certificates.
+2.  **Sensitive permission usage.** KwachaWise requests `RECEIVE_SMS` in
+    order to automatically capture Airtel Money, TNM Mpamba, and bank
+    transaction alerts — this is core to the app's value proposition of
+    automated bookkeeping. However, SMS-reading permissions are also
+    commonly abused by banking trojans, so Google's classifier flags
+    *any* app requesting this permission more aggressively when it also
+    lacks Play Store history, regardless of what the app actually does
+    with it.
+
+**What this does *not* mean:**
+*   It does not mean the APK is corrupted, unsigned, or tampered with.
+*   It does not mean malicious code was detected in KwachaWise — this is a
+    reputation/heuristic flag, not a malware detection result.
+
+**How we mitigated it:**
+*   The distributed APK is a properly signed **release** build (not a debug
+    build), verified with `apksigner verify`, which is the correct and
+    secure way to distribute an Android app outside the Play Store.
+*   We evaluated moving to Google's SMS Retriever API, which does not
+    require the `RECEIVE_SMS` permission at all — however, this API only
+    works with SMS messages formatted to include an app-specific hash,
+    which we do not control since messages originate from Airtel Money,
+    TNM Mpamba, and partner banks. This made it unsuitable for our use
+    case within the hackathon timeframe.
+*   We reviewed and minimized the permission footprint in the manifest to
+    ensure only permissions actually used by the app are declared.
+*   For judges and testers evaluating this submission, we recorded a short
+    video walkthrough showing how to proceed past the Play Protect warning
+    during installation — **[watch it here](resources/videos/how-to-install-apk.mp4)**,
+    or scroll up to the [Live Demo / Showcase](#live-demo--showcase) section
+    for a clickable preview.
+
+**Path to a permanent fix (post-hackathon):**
+The most reliable long-term resolution is registering our signing
+certificate with Google via a **Play Console Internal Testing (or
+production) track**. Once an APK has been processed through Play Store
+infrastructure, Play Protect recognizes the signing certificate and this
+warning no longer appears for installs originating from that track. This
+is documented as a planned Phase 2 action item alongside our other
+[future roadmap](#future-roadmap) items.
 
 ---
 
