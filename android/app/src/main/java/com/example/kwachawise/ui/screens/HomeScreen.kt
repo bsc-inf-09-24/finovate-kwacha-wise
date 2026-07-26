@@ -10,6 +10,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
@@ -24,19 +26,25 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.kwachawise.R
+import com.example.kwachawise.data.AppTheme
 import com.example.kwachawise.navigation.Screen
+import com.example.kwachawise.ui.theme.ThemeAssets
 import java.util.Locale
 
 @Composable
 fun HomeScreen(
     balance: Double = 20983.0,
     pendingCount: Int = 2,
-    onNavigate: (String) -> Unit
+    appTheme: AppTheme = AppTheme.SYSTEM,
+    onNavigate: (String) -> Unit,
+    onThemeToggle: () -> Unit
 ) {
+    val assets = ThemeAssets.current()
+    
     Scaffold(
         containerColor = MaterialTheme.colorScheme.primary,
         topBar = {
-            HomeTopBar()
+            HomeTopBar(appTheme = appTheme, onThemeToggle = onThemeToggle)
         }
     ) { padding ->
         Column(
@@ -108,7 +116,11 @@ fun HomeScreen(
 }
 
 @Composable
-fun HomeTopBar() {
+fun HomeTopBar(
+    appTheme: AppTheme,
+    onThemeToggle: () -> Unit
+) {
+    val assets = ThemeAssets.current()
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -118,7 +130,7 @@ fun HomeTopBar() {
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Image(
-                painter = painterResource(id = R.drawable.logo_mark),
+                painter = painterResource(id = assets.appIcon),
                 contentDescription = null,
                 modifier = Modifier.size(40.dp)
             )
@@ -129,6 +141,13 @@ fun HomeTopBar() {
             }
         }
         Row {
+            IconButton(onClick = onThemeToggle) {
+                Icon(
+                    imageVector = if (appTheme == AppTheme.DARK) Icons.Default.LightMode else Icons.Default.DarkMode,
+                    contentDescription = "Toggle Theme",
+                    tint = Color.White
+                )
+            }
             IconButton(onClick = {}) {
                 Icon(Icons.Default.Notifications, contentDescription = null, tint = Color.White)
             }
