@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.kwachawise.models.Transaction
 import com.example.kwachawise.models.TransactionTag
+import com.example.kwachawise.models.TransactionType
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -162,10 +163,10 @@ fun TransactionListItem(transaction: Transaction) {
                 )
             }
             Text(
-                text = "K${String.format(Locale.US, "%,.2f", transaction.amount)}",
+                text = "${if (transaction.type == TransactionType.INCOME) "+" else "-"}K${String.format(Locale.US, "%,.2f", transaction.amount)}",
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp,
-                color = if (transaction.amount < 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+                color = if (transaction.type == TransactionType.INCOME) Color(0xFF4CAF50) else Color(0xFFF44336)
             )
         }
     }

@@ -8,6 +8,7 @@ object MockData {
             id = UUID.randomUUID().toString(),
             amount = 12000.0,
             description = "FDH Bank Transfer",
+            type = TransactionType.INCOME,
             rawText = "Txn: 123456 Amt: 12000.00 from FDH",
             tag = TransactionTag.UNSORTED,
             date = "Sep 01, 2:24 PM"
@@ -16,6 +17,7 @@ object MockData {
             id = UUID.randomUUID().toString(),
             amount = 950.0,
             description = "NBM Payment",
+            type = TransactionType.EXPENSE,
             tag = TransactionTag.BUSINESS,
             date = "Sep 01, 10:15 AM"
         ),
@@ -23,6 +25,7 @@ object MockData {
             id = UUID.randomUUID().toString(),
             amount = 1050.0,
             description = "Mpamba Cash In",
+            type = TransactionType.INCOME,
             tag = TransactionTag.PERSONAL,
             date = "Aug 31, 6:30 PM"
         ),
@@ -30,6 +33,7 @@ object MockData {
             id = UUID.randomUUID().toString(),
             amount = 3332.0,
             description = "Escom Units",
+            type = TransactionType.EXPENSE,
             rawText = "You spent K3,332.00 on Escom",
             tag = TransactionTag.UNSORTED,
             date = "Aug 30, 9:00 AM"

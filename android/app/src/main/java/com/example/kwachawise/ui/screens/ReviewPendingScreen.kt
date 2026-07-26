@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.kwachawise.models.Transaction
 import com.example.kwachawise.models.TransactionTag
+import com.example.kwachawise.models.TransactionType
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -70,6 +71,24 @@ fun PendingTransactionItem(
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = if (transaction.type == TransactionType.INCOME) "💰 INCOME" else "💸 EXPENSE",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = if (transaction.type == TransactionType.INCOME) Color(0xFF4CAF50) else Color(0xFFF44336)
+                )
+                Text(
+                    text = transaction.date,
+                    fontSize = 11.sp,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = transaction.rawText ?: "No source text",
                 fontSize = 14.sp,

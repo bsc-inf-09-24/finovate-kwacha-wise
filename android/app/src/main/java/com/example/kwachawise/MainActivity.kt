@@ -92,9 +92,15 @@ fun KwachaWiseApp() {
             })
         }
         composable(Screen.Home.route) {
-            HomeScreen(onNavigate = { route ->
-                navController.navigate(route)
-            })
+            val balance by viewModel.balance.collectAsState()
+            val pendingCount by viewModel.pendingCount.collectAsState()
+            HomeScreen(
+                balance = balance,
+                pendingCount = pendingCount,
+                onNavigate = { route ->
+                    navController.navigate(route)
+                }
+            )
         }
         composable(Screen.ReviewPending.route) {
             val pendingTransactions by viewModel.pendingTransactions.collectAsState()
@@ -116,11 +122,12 @@ fun KwachaWiseApp() {
         }
         composable(Screen.AddCashEntry.route) {
             AddCashEntryScreen(
-                onSave = { amount, desc, tag -> 
+                onSave = { amount, desc, tag, type -> 
                     val transaction = Transaction(
                         id = java.util.UUID.randomUUID().toString(),
                         amount = amount,
                         description = desc,
+                        type = type,
                         tag = tag,
                         date = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", java.util.Locale.US).format(java.util.Date())
                     )
@@ -131,7 +138,12 @@ fun KwachaWiseApp() {
             )
         }
         composable(Screen.Insights.route) {
-            InsightsScreen(onBack = { navController.popBackStack() })
+            val insights by viewModel.aiInsights.collectAsState()
+            InsightsScreen(
+                healthSignal = insights,
+                onViewInsights = { viewModel.fetchAiInsights() },
+                onBack = { navController.popBackStack() }
+            )
         }
         composable(Screen.PasteSms.route) {
             PasteSmsScreen(

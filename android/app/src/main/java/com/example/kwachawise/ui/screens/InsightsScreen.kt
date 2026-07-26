@@ -26,11 +26,27 @@ import com.example.kwachawise.ui.theme.KwachaWarning
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InsightsScreen(
-    healthSignal: String = MockData.insights,
-    recommendations: List<String> = MockData.recommendations,
+    healthSignal: String? = null,
+    onViewInsights: () -> Unit,
     onBack: () -> Unit
 ) {
-    var showInsights by remember { mutableStateOf(false) }
+    var loading by remember { mutableStateOf(false) }
+
+    LaunchedEffect(healthSignal) {
+        if (healthSignal != null) {
+            loading = false
+        }
+    }
+
+    val signal = remember(healthSignal) {
+        healthSignal?.lineSequence()?.find { it.startsWith("SIGNAL:") }
+            ?.substringAfter("SIGNAL:")?.trim() ?: "Calculating..."
+    }
+
+    val recommendations = remember(healthSignal) {
+        healthSignal?.lineSequence()?.filter { it.startsWith("ADVICE:") }
+            ?.map { it.substringAfter("ADVICE:").trim() }?.toList() ?: emptyList()
+    }
 
     Scaffold(
         topBar = {
@@ -44,7 +60,7 @@ fun InsightsScreen(
             )
         }
     ) { padding ->
-        if (!showInsights) {
+        if (healthSignal == null) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -60,16 +76,20 @@ fun InsightsScreen(
                         .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        Icons.Default.Info,
-                        contentDescription = null,
-                        modifier = Modifier.size(64.dp),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
+                    if (loading) {
+                        CircularProgressIndicator()
+                    } else {
+                        Icon(
+                            Icons.Default.Info,
+                            contentDescription = null,
+                            modifier = Modifier.size(64.dp),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
                 }
                 Spacer(modifier = Modifier.height(32.dp))
                 Text(
-                    text = "Get your insights",
+                    text = if (loading) "Analyzing transactions..." else "Get your insights",
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground
@@ -82,9 +102,13 @@ fun InsightsScreen(
                 )
                 Spacer(modifier = Modifier.height(48.dp))
                 Button(
-                    onClick = { showInsights = true },
+                    onClick = { 
+                        loading = true
+                        onViewInsights() 
+                    },
                     modifier = Modifier.fillMaxWidth().height(56.dp),
-                    shape = RoundedCornerShape(16.dp)
+                    shape = RoundedCornerShape(16.dp),
+                    enabled = !loading
                 ) {
                     Text("View Insights")
                 }
@@ -104,7 +128,7 @@ fun InsightsScreen(
                         fontWeight = FontWeight.Bold
                     )
                     Spacer(modifier = Modifier.height(16.dp))
-                    HealthSignalCard(healthSignal)
+                    HealthSignalCard(signal)
                 }
 
                 item {
@@ -117,6 +141,17 @@ fun InsightsScreen(
 
                 items(recommendations) { recommendation ->
                     RecommendationItem(recommendation)
+                }
+
+                item {
+                    Spacer(modifier = Modifier.height(24.dp))
+                    OutlinedButton(
+                        onClick = { onViewInsights() },
+                        modifier = Modifier.fillMaxWidth().height(56.dp),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        Text("Refresh Analysis")
+                    }
                 }
             }
         }
