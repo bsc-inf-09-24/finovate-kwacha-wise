@@ -6,9 +6,19 @@ import com.example.kwachawise.models.TransactionType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-class TransactionRepository(private val transactionDao: TransactionDao) {
+class TransactionRepository(
+    private val transactionDao: TransactionDao,
+    private val aiAnalysisDao: AiAnalysisDao
+) {
     val allTransactions: Flow<List<Transaction>> = transactionDao.getAllTransactions()
         .map { entities -> entities.map { it.toDomain() } }
+    
+    val latestAiAnalysis: Flow<AiAnalysisEntity?> = aiAnalysisDao.getLatestAnalysis()
+    val aiAnalysisHistory: Flow<List<AiAnalysisEntity>> = aiAnalysisDao.getAllAnalysis()
+
+    suspend fun saveAiAnalysis(analysis: AiAnalysisEntity) {
+        aiAnalysisDao.insertAnalysis(analysis)
+    }
 
     val pendingTransactions: Flow<List<Transaction>> = transactionDao.getTransactionsByTag(TransactionTag.UNSORTED.name)
         .map { entities -> entities.map { it.toDomain() } }

@@ -71,7 +71,7 @@ fun KwachaWiseApp() {
     val navController = rememberNavController()
     val context = androidx.compose.ui.platform.LocalContext.current
     val database = AppDatabase.getDatabase(context)
-    val repository = TransactionRepository(database.transactionDao())
+    val repository = TransactionRepository(database.transactionDao(), database.aiAnalysisDao())
     val viewModel: TransactionViewModel = viewModel(
         factory = TransactionViewModelFactory(repository)
     )
@@ -141,8 +141,12 @@ fun KwachaWiseApp() {
         }
         composable(Screen.Insights.route) {
             val insights by viewModel.aiInsights.collectAsState()
+            val history by viewModel.aiAnalysisHistory.collectAsState()
+            val isNewDataAvailable by viewModel.isNewDataAvailable.collectAsState()
             InsightsScreen(
                 healthSignal = insights,
+                history = history,
+                isNewDataAvailable = isNewDataAvailable,
                 onViewInsights = { viewModel.fetchAiInsights() },
                 onBack = { navController.popBackStack() }
             )
