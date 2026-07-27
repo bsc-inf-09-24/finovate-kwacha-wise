@@ -45,7 +45,7 @@ KwachaWise provides a "bookkeeping-on-autopilot" solution. By intercepting trans
 
 *   **Live App URL:** [https://drive.usercontent.google.com/download?id=1zZKDtGHhpJ6hVS7uKsHHUmSNm8uzdZ36&export=download&authuser=0](https://drive.usercontent.google.com/download?id=1zZKDtGHhpJ6hVS7uKsHHUmSNm8uzdZ36&export=download&authuser=0)
 *   **Demo Description:** Visitors can install the app to experience the automated SMS capture, manual cash entry flow, and the AI-driven insights dashboard.
-*   **Demo Video (5-min):**  <a href="resources/videos/demo.mp4">
+*   **Demo Video (5-min):**  <a href="https://drive.google.com/file/d/1jk2MOR3HiN4mz4B9pfIvo-1YH2zUsBUP/view?usp=drivesdk">
     <img src="resources/screenshots/demo-vedio-thumbnail.png" alt="Click to watch demo video" width="480">
   </a>
 
@@ -57,20 +57,18 @@ for why). Before downloading, watch this **30-second walkthrough** showing
 exactly how to get past that screen safely:
 
 <p align="center">
-  <a href="resources/videos/how-to-install-apk.mp4">
+  <a href="https://drive.google.com/file/d/1AC4oMm04Kjdxxmp9X45K440ZPZyL_0iE/view?usp=drivesdk">
     <img src="resources/screenshots/install-video-thumbnail.jpg" alt="How to install KwachaWise despite the Play Protect warning — click to watch" width="480">
   </a>
   <br>
   <em>▶ Click the image above to play the install walkthrough video</em>
   <br>
-  <a href="resources/videos/how-to-install-apk.mp4">Or open the video file directly</a>
+  <a href="https://drive.google.com/file/d/1AC4oMm04Kjdxxmp9X45K440ZPZyL_0iE/view?usp=drivesdk">Or open the video file directly</a>
 </p>
 
-> **Note for judges/reviewers:** GitHub does not play video files inline on
-> the repository page — clicking the thumbnail or link above will download
-> or open the `.mp4` in a new tab depending on your browser. If you're
-> viewing this repo locally or have cloned it, the file is at
-> `resources/videos/how-to-install-apk.mp4`.
+> **Note for judges/reviewers:** The videos are hosted on Google Drive for
+> reliable playback. Clicking the thumbnail or link above will open the
+> video in Google Drive where you can watch it directly.
 
 ---
 
